@@ -1,33 +1,29 @@
 package com.larv.pharmacy.config;
 
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.sql.DataSource;
-
 /**
  * Picks the migration directory from the JDBC URL so one build can run on
- * MySQL (local development, tests) and PostgreSQL (cloud deployment):
+ * MySQL (local development, tests, deployment) or PostgreSQL:
  * {@code db/migration/mysql} or {@code db/migration/postgresql}.
  *
- * <p>This is an explicit {@code Flyway} bean; Spring Boot's auto-configured
- * bean backs off ({@code @ConditionalOnMissingBean}).</p>
+ * <p>Only the location is customized; Spring Boot keeps ownership of the
+ * {@code Flyway} bean and its initializer so that the JPA
+ * {@code entityManagerFactory} still runs after the migrations have been
+ * applied.</p>
  */
 @Configuration
 public class FlywayConfig {
 
     @Bean
-    public Flyway flyway(DataSource dataSource, @Value("${spring.datasource.url}") String url) {
+    public FlywayConfigurationCustomizer migrationLocationCustomizer(@Value("${spring.datasource.url}") String url) {
         boolean postgres = url != null && url.startsWith("jdbc:postgresql");
-        FluentConfiguration configuration = new FluentConfiguration()
-                .dataSource(dataSource)
-                .locations(postgres
-                        ? "classpath:db/migration/postgresql"
-                        : "classpath:db/migration/mysql")
-                .validateOnMigrate(true);
-        return new Flyway(configuration);
+        String location = postgres
+                ? "classpath:db/migration/postgresql"
+                : "classpath:db/migration/mysql";
+        return configuration -> configuration.locations(location);
     }
 }

@@ -25,3 +25,4 @@ logging:
     root: WARN
     com.larv.pharmacy: INFO
     org.springframework.security: WARN
+    org.flywaydb: INFO
