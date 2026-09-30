@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/lpms_dev?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=UTC&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    show-sql: false
+
+app:
+  jwt:
+    # Development-only fallback secret. Production profile has no default and fails fast.
+    secret: ${JWT_SECRET:dev-only-insecure-jwt-secret-change-me-0123456789abcdef0123456789abcdef}
+    expiration-seconds: ${JWT_EXPIRATION:3600}
+  bootstrap:
+    admin-username: ${ADMIN_USERNAME:admin}
+    # Must satisfy PasswordPolicy (8-72 chars, letter + digit, must not contain the username).
+    admin-initial-password: ${ADMIN_INITIAL_PASSWORD:Ph@rmacy2026}
+
+logging:
+  level:
+    com.larv.pharmacy: DEBUG
