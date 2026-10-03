@@ -92,8 +92,15 @@ class SaleRepository @Inject constructor(
         }
 
         // Backend rule: each drug may appear only once per sale.
-        val duplicate = draft.lines.groupBy { it.drugLocalId }.firstOrNull { it.value.size > 1 }
-        if (duplicate != null) {
+        val seen = mutableSetOf<String>()
+        var hasDuplicate = false
+        for (line in draft.lines) {
+            if (!seen.add(line.drugLocalId)) {
+                hasDuplicate = true
+                break
+            }
+        }
+        if (hasDuplicate) {
             return validation("sale_duplicate_drug")
         }
 
@@ -270,21 +277,34 @@ class SaleRepository @Inject constructor(
                         // The refund itself landed; only the refresh failed, so
                         // apply the local best estimate rather than telling the
                         // cashier the refund failed.
-                        val refunded = items.sumOf { line ->
-                            val unitPrice = storedItems
-                                .firstOrNull { it.serverSaleItemId == line.serverSaleItemId }
-                                ?.unitSellingPrice ?: 0.0
-                            unitPrice * line.quantity
+                        var refunded = 0.0
+                        for (line in items) {
+                            for (stored in storedItems) {
+                                if (stored.serverSaleItemId == line.serverSaleItemId) {
+                                    refunded += stored.unitSellingPrice * line.quantity
+                                    break
+                                }
+                            }
                         }
                         val newRefundedTotal = sale.refundedTotal + refunded
-                        val fullyRefunded = storedItems
-                            .filter { it.serverSaleItemId != null }
-                            .all { item ->
-                                val requested = items
-                                    .firstOrNull { it.serverSaleItemId == item.serverSaleItemId }
-                                    ?.quantity ?: 0
-                                item.refundedQuantity + requested >= item.quantity
+                        var fullyRefunded = true
+                        for (stored in storedItems) {
+                            if (stored.serverSaleItemId == null) {
+                                fullyRefunded = false
+                                continue
                             }
+                            var requested = 0
+                            for (line in items) {
+                                if (line.serverSaleItemId == stored.serverSaleItemId) {
+                                    requested = line.quantity
+                                    break
+                                }
+                            }
+                            if (stored.refundedQuantity + requested < stored.quantity) {
+                                fullyRefunded = false
+                                break
+                            }
+                        }
                         saleDao.applyRefund(
                             localId = saleLocalId,
                             status = if (fullyRefunded) {
