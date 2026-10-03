@@ -101,11 +101,11 @@ class SyncEngine @Inject constructor(
     fun start() {
         connectivity.start()
         scope.launch {
-            combine(
+            combine<Boolean, Int, Int, Unit>(
                 connectivity.online,
                 outboxDao.observePendingCount(),
                 outboxDao.observeBlockedCount(),
-            ).collect { (online, pending, blocked) ->
+            ) { online, pending, blocked ->
                 _state.update {
                     it.copy(online = online, pending = pending, blocked = blocked)
                 }
