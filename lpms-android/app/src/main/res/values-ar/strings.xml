@@ -1,0 +1,368 @@
+<resources>
+    <string name="app_name">صيدلية لارف</string>
+
+    <!-- ISO 4217 currency used for every price in the app.
+         Non-translatable: it is a data value, not prose. -->
+    <string name="currency_code" translatable="false">ILS</string>
+
+    <!-- Common actions -->
+    <string name="action_ok">موافق</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_retry">إعادة المحاولة</string>
+    <string name="action_close">إغلاق</string>
+    <string name="action_sign_out">تسجيل الخروج</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_edit">تعديل</string>
+    <string name="action_new">جديد</string>
+    <string name="action_search">بحث</string>
+    <string name="action_apply">تطبيق</string>
+    <string name="action_clear">مسح</string>
+    <string name="action_view_all">عرض الكل</string>
+    <string name="action_continue">متابعة</string>
+    <string name="action_add">إضافة</string>
+    <string name="action_back">رجوع</string>
+
+    <!-- Generic states -->
+    <string name="common_loading">جارٍ التحميل…</string>
+    <string name="common_empty">لا يوجد شيء بعد</string>
+    <string name="error_generic">حدث خطأ ما. حاول مرة أخرى.</string>
+    <string name="error_network">تعذّر الوصول إلى الخادم. تحقّق من اتصالك وحاول مجدداً.</string>
+    <string name="error_unauthorized">انتهت صلاحية جلستك. الرجاء تسجيل الدخول مرة أخرى.</string>
+    <string name="error_forbidden">لا تملك صلاحية لفعل ذلك.</string>
+    <string name="error_not_found">غير موجود.</string>
+    <string name="error_rate_limited">محاولات كثيرة جداً. انتظر لحظة ثم حاول مجدداً.</string>
+    <string name="field_required">هذا الحقل مطلوب</string>
+    <string name="confirm_delete">حذف «%1$s»؟ لا يمكن التراجع عن هذا.</string>
+
+    <!-- Sign in -->
+    <string name="login_title">تسجيل الدخول</string>
+    <string name="login_subtitle">نظام إدارة صيدلية لارف</string>
+    <string name="login_username">اسم المستخدم</string>
+    <string name="login_password">كلمة المرور</string>
+    <string name="login_username_hint">أدخل اسم المستخدم</string>
+    <string name="login_password_hint">أدخل كلمة المرور</string>
+    <string name="login_submit">تسجيل الدخول</string>
+    <string name="login_submitting">جارٍ تسجيل الدخول…</string>
+    <string name="login_error_credentials">اسم المستخدم أو كلمة المرور غير صحيحة</string>
+    <string name="login_show_password">إظهار كلمة المرور</string>
+    <string name="login_hide_password">إخفاء كلمة المرور</string>
+
+    <!-- Change password -->
+    <string name="change_password_title">تغيير كلمة المرور</string>
+    <string name="change_password_subtitle">يجب تعيين كلمة مرور جديدة قبل المتابعة.</string>
+    <string name="change_password_current">كلمة المرور الحالية</string>
+    <string name="change_password_new">كلمة المرور الجديدة</string>
+    <string name="change_password_confirm">تأكيد كلمة المرور الجديدة</string>
+    <string name="change_password_rule">استخدم 8 أحرف على الأقل</string>
+    <string name="change_password_mismatch">كلمتا المرور غير متطابقتين</string>
+    <string name="change_password_done">تم تغيير كلمة المرور</string>
+    <string name="change_password_submit">تحديث كلمة المرور</string>
+    <string name="change_password_sign_in_again">تسجيل الدخول مجدداً</string>
+
+    <!-- Roles -->
+    <string name="role_employee">موظف</string>
+    <string name="role_pharmacist">صيدلي</string>
+    <string name="role_admin">مدير النظام</string>
+
+    <!-- Language (endonyms stay in their own language) -->
+    <string name="language">اللغة</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">العربية</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_sell">بيع</string>
+    <string name="nav_drugs">الأدوية</string>
+    <string name="nav_customers">العملاء</string>
+    <string name="nav_more">المزيد</string>
+
+    <!-- Home / dashboard -->
+    <string name="home_title">الرئيسية</string>
+    <string name="home_signed_in_as">مسجّل الدخول باسم %1$s</string>
+    <string name="home_section_language">لغة التطبيق</string>
+    <string name="home_version">الإصدار %1$s</string>
+    <string name="home_quick_actions">إجراءات سريعة</string>
+    <string name="dashboard_today">اليوم</string>
+    <string name="dashboard_this_month">هذا الشهر</string>
+    <string name="dashboard_inventory">المخزون</string>
+    <string name="dashboard_customers">العملاء</string>
+    <string name="stat_revenue">الإيرادات</string>
+    <string name="stat_profit">الربح</string>
+    <string name="stat_sales">المبيعات</string>
+    <string name="stat_inventory_value">قيمة المخزون</string>
+    <string name="stat_low_stock">مخزون منخفض</string>
+    <string name="stat_expiring">تنتهي قريباً</string>
+    <string name="stat_total_debt">إجمالي الديون</string>
+    <string name="stat_customers">العملاء</string>
+    <string name="dashboard_top_selling">الأكثر مبيعاً</string>
+    <string name="dashboard_units_sold">بيعت %1$s</string>
+
+    <!-- More -->
+    <string name="more_title">المزيد</string>
+    <string name="more_section_operations">العمليات</string>
+    <string name="more_section_reports">التقارير</string>
+    <string name="more_section_administration">الإدارة</string>
+    <string name="more_section_preferences">التفضيلات</string>
+    <string name="more_sales_history">سجل المبيعات</string>
+    <string name="more_inventory">المخزون</string>
+    <string name="more_reports">التقارير</string>
+    <string name="more_users">المستخدمون</string>
+    <string name="more_audit">سجل التدقيق</string>
+    <string name="more_settings">الإعدادات</string>
+
+    <!-- Drugs -->
+    <string name="drugs_title">الأدوية</string>
+    <string name="drugs_search_hint">ابحث بالاسم أو الباركود أو الاسم العلمي</string>
+    <string name="drugs_empty">لا توجد أدوية مطابقة لبحثك</string>
+    <string name="drugs_count">%1$s دواء</string>
+    <string name="drug_new">دواء جديد</string>
+    <string name="drug_edit">تعديل الدواء</string>
+    <string name="drug_name">الاسم</string>
+    <string name="drug_name_hint">الاسم التجاري</string>
+    <string name="drug_generic_name">الاسم العلمي</string>
+    <string name="drug_barcode">الباركود</string>
+    <string name="drug_manufacturer">الشركة المصنّعة</string>
+    <string name="drug_category">التصنيف</string>
+    <string name="drug_dosage_form">الشكل الصيدلاني</string>
+    <string name="drug_strength">التركيز</string>
+    <string name="drug_unit">الوحدة</string>
+    <string name="drug_description">الوصف</string>
+    <string name="drug_min_stock">حد المخزون الأدنى</string>
+    <string name="drug_quantity">الكمية في المخزون</string>
+    <string name="drug_active">مفعّل (قابل للبيع)</string>
+    <string name="drug_saved">تم حفظ الدواء</string>
+    <string name="drug_deleted">تم حذف الدواء</string>
+    <string name="chip_low_stock">مخزون منخفض</string>
+    <string name="chip_inactive">غير مفعّل</string>
+    <string name="chip_out_of_stock">نفد المخزون</string>
+
+    <!-- Dosage forms (index-aligned with the DosageForm enum) -->
+    <string-array name="dosage_form_labels">
+        <item>قرص</item>
+        <item>كبسولة</item>
+        <item>شراب</item>
+        <item>محلول</item>
+        <item>حقن</item>
+        <item>كريم</item>
+        <item>مرهم</item>
+        <item>جل</item>
+        <item>قطرات</item>
+        <item>بخّاخ</item>
+        <item>رذاذ</item>
+        <item>مسحوق</item>
+        <item>واحة</item>
+        <item>تحاميل</item>
+        <item>أخرى</item>
+    </string-array>
+
+    <!-- Sales -->
+    <string name="sales_title">المبيعات</string>
+    <string name="sales_empty">لا توجد مبيعات في هذه الفترة</string>
+    <string name="sales_total">الإجمالي</string>
+    <string name="sale_detail">فاتورة #%1$s</string>
+    <string name="sale_items">البنود</string>
+    <string name="sale_subtotal">المجموع الفرعي</string>
+    <string name="sale_discount">الخصم</string>
+    <string name="sale_total">الإجمالي</string>
+    <string name="sale_paid">المبلغ المدفوع</string>
+    <string name="sale_due">المبلغ المتبقي</string>
+    <string name="sale_profit">الربح</string>
+    <string name="sale_cost">التكلفة</string>
+    <string name="sale_customer">العميل</string>
+    <string name="sale_cash_customer">زبون عابر</string>
+    <string name="sale_created_by">باعه</string>
+    <string name="sale_created_at">التاريخ</string>
+    <string name="sale_refunded_total">المُرجَع</string>
+    <string name="sale_refund">استرجاع</string>
+    <string name="sale_refund_title">استرجاع الفاتورة #%1$s</string>
+    <string name="sale_refund_reason">السبب</string>
+    <string name="sale_refund_submit">تأكيد الاسترجاع</string>
+    <string name="sale_refunded">تم تسجيل الاسترجاع</string>
+    <string name="sale_status_completed">مكتملة</string>
+    <string name="sale_status_partially_refunded">مُرجَع جزئياً</string>
+    <string name="sale_status_refunded">مُرجَع بالكامل</string>
+    <string name="sale_refunded_qty">المُرجَع: %1$s</string>
+    <string name="sale_pending">قيد الانتظار</string>
+
+    <!-- Payment methods -->
+    <string name="payment_cash">نقدي</string>
+    <string name="payment_card">بطاقة</string>
+    <string name="payment_credit">آجل</string>
+    <string name="payment_bank_transfer">تحويل بنكي</string>
+    <string name="payment_insurance">تأمين</string>
+
+    <!-- Point of sale -->
+    <string name="pos_title">بيع جديد</string>
+    <string name="pos_search_hint">ابحث عن دواء أو امسح الباركود</string>
+    <string name="pos_cart">السلة</string>
+    <string name="pos_cart_empty">اضغط على دواء لإضافته إلى السلة</string>
+    <string name="pos_no_results">لم يتم العثور على أدوية</string>
+    <string name="pos_qty">الكمية</string>
+    <string name="pos_unit_price">سعر الوحدة</string>
+    <string name="pos_line_total">إجمالي البند</string>
+    <string name="pos_customer">العميل</string>
+    <string name="pos_walk_in">زبون عابر</string>
+    <string name="pos_payment_method">طريقة الدفع</string>
+    <string name="pos_discount">الخصم</string>
+    <string name="pos_amount_paid">المبلغ المدفوع</string>
+    <string name="pos_change">الباقي</string>
+    <string name="pos_checkout">إتمام البيع</string>
+    <string name="pos_processing">جارٍ المعالجة…</string>
+    <string name="pos_sale_completed">تم إتمام البيع</string>
+    <string name="pos_items_count">%1$s بنود</string>
+    <string name="pos_insufficient_stock">متوفر فقط %1$s</string>
+    <string name="barcode_permission_needed">يلزم الوصول إلى الكاميرا لمسح الباركود.</string>
+    <string name="barcode_scan">مسح الباركود</string>
+    <string name="offline_banner">أنت غير متصل. سيتم حفظ المبيعات وإرسالها عند إعادة الاتصال.</string>
+
+    <!-- Customers -->
+    <string name="customers_title">العملاء</string>
+    <string name="customers_search_hint">ابحث بالاسم أو الهاتف</string>
+    <string name="customers_empty">لا يوجد عملاء مطابقون لبحثك</string>
+    <string name="customer_new">عميل جديد</string>
+    <string name="customer_edit">تعديل العميل</string>
+    <string name="customer_name">الاسم</string>
+    <string name="customer_phone">الهاتف</string>
+    <string name="customer_address">العنوان</string>
+    <string name="customer_notes">ملاحظات</string>
+    <string name="customer_active">مفعّل</string>
+    <string name="customer_saved">تم حفظ العميل</string>
+    <string name="customer_deleted">تم حذف العميل</string>
+    <string name="customer_account">الحساب</string>
+    <string name="customer_total_purchases">إجمالي المشتريات</string>
+    <string name="customer_total_paid">إجمالي المدفوع</string>
+    <string name="customer_total_refunds">إجمالي المرتجعات</string>
+    <string name="customer_current_debt">الرصيد الحالي</string>
+    <string name="customer_transactions">الحركات</string>
+    <string name="customer_transactions_empty">لا توجد حركات بعد</string>
+    <string name="customer_record_payment">تسجيل دفعة</string>
+    <string name="customer_record_adjustment">تسجيل تسوية</string>
+    <string name="customer_amount">المبلغ</string>
+    <string name="customer_adjustment_direction">الاتجاه</string>
+    <string name="customer_direction_debit">مدين (زيادة الرصيد)</string>
+    <string name="customer_direction_credit">دائن (تقليل الرصيد)</string>
+    <string name="customer_adjustment_description">الوصف</string>
+    <string name="customer_in_debt">مدين</string>
+    <string name="customer_settled">مسدَّد</string>
+    <string name="transaction_sale">بيع</string>
+    <string name="transaction_payment">دفعة</string>
+    <string name="transaction_adjustment">تسوية</string>
+    <string name="transaction_refund">استرجاع</string>
+
+    <!-- Inventory -->
+    <string name="inventory_title">المخزون</string>
+    <string name="inventory_tab_batches">الدفعات</string>
+    <string name="inventory_tab_low_stock">مخزون منخفض</string>
+    <string name="inventory_tab_expiring">تنتهي قريباً</string>
+    <string name="inventory_tab_valuation">التقييم</string>
+    <string name="inventory_batches_empty">لا توجد دفعات مطابقة لمرشّحاتك</string>
+    <string name="inventory_low_stock_empty">لا شيء تحت الحد الأدنى</string>
+    <string name="inventory_expiring_empty">لا شيء ينتهي خلال هذه المدة</string>
+    <string name="inventory_valuation_empty">لا يوجد مخزون لتقييمه بعد</string>
+    <string name="inventory_new_purchase">شراء جديد</string>
+    <string name="purchase_drug">الدواء</string>
+    <string name="purchase_quantity">الكمية</string>
+    <string name="purchase_unit_price">سعر شراء الوحدة</string>
+    <string name="purchase_supplier">المورّد</string>
+    <string name="purchase_batch_number">رقم الدفعة</string>
+    <string name="purchase_expiry">تاريخ الانتهاء</string>
+    <string name="purchase_saved">تم استلام المخزون</string>
+    <string name="batch_remaining">المتبقي</string>
+    <string name="batch_received">تاريخ الاستلام</string>
+    <string name="batch_expiry">تاريخ الانتهاء</string>
+    <string name="batch_supplier">المورّد</string>
+    <string name="batch_expired">منتهي</string>
+    <string name="batch_expiring_in">ينتهي خلال %1$s يوم</string>
+    <string name="valuation_total_qty">الكمية</string>
+    <string name="valuation_cost">تكلفة المخزون</string>
+    <string name="valuation_avg">متوسط التكلفة</string>
+    <string name="inventory_filter_expiring_days">تنتهي خلال (أيام)</string>
+
+    <!-- Reports -->
+    <string name="reports_title">التقارير</string>
+    <string name="report_daily">يومي</string>
+    <string name="report_weekly">أسبوعي</string>
+    <string name="report_monthly">شهري</string>
+    <string name="report_custom">مدى مخصص</string>
+    <string name="report_from">من</string>
+    <string name="report_to">إلى</string>
+    <string name="report_revenue">الإيرادات</string>
+    <string name="report_cost">التكلفة</string>
+    <string name="report_profit">الربح</string>
+    <string name="report_sales_count">المبيعات</string>
+    <string name="report_avg_sale">متوسط الفاتورة</string>
+    <string name="report_details">تفاصيل البنود</string>
+    <string name="report_details_empty">لا توجد بنود في هذه الفترة</string>
+    <string name="report_range_label">%1$s – %2$s</string>
+    <string name="report_margin">هامش الربح</string>
+
+    <!-- Users -->
+    <string name="users_title">المستخدمون</string>
+    <string name="users_empty">لا يوجد مستخدمون مطابقون لمرشّحاتك</string>
+    <string name="user_new">مستخدم جديد</string>
+    <string name="user_edit">تعديل المستخدم</string>
+    <string name="user_username">اسم المستخدم</string>
+    <string name="user_username_hint">حروف وأرقام و . _ -</string>
+    <string name="user_role">الدور</string>
+    <string name="user_password">كلمة المرور</string>
+    <string name="user_password_hint">من 8 إلى 72 خارفاً</string>
+    <string name="user_enabled">مفعّل</string>
+    <string name="user_last_login">آخر تسجيل دخول</string>
+    <string name="user_created">تم إنشاء المستخدم</string>
+    <string name="user_updated">تم تحديث المستخدم</string>
+    <string name="user_password_reset">تم إعادة تعيين كلمة المرور</string>
+    <string name="user_status_updated">تم تحديث الحالة</string>
+    <string name="user_reset_password_title">إعادة تعيين كلمة مرور %1$s</string>
+    <string name="user_enabled_status">مفعّل</string>
+    <string name="user_disabled_status">معطّل</string>
+    <string name="user_filter_role">الدور</string>
+    <string name="user_filter_status">الحالة</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_section_inventory">المخزون</string>
+    <string name="settings_section_customers">العملاء</string>
+    <string name="settings_allow_expired_sales">السماح ببيع المخزون المنتهي</string>
+    <string name="settings_allow_expired_sales_desc">يسمح ببيع دفعة منتهية الصلاحية.</string>
+    <string name="settings_allow_negative_balance">السماح برصيد سالب للعميل</string>
+    <string name="settings_allow_negative_balance_desc">قد يقتراض العميل من الصيدلية.</string>
+    <string name="settings_expiring_soon_days">مدة «تنتهي قريباً» (أيام)</string>
+    <string name="settings_expiring_soon_days_desc">المدة الافتراضية لتقرير الأدوية المنتهية.</string>
+    <string name="settings_saved">تم حفظ الإعدادات</string>
+    <string name="settings_app">التطبيق</string>
+    <string name="settings_about">الإصدار %1$s</string>
+
+    <!-- Audit -->
+    <string name="audit_title">سجل التدقيق</string>
+    <string name="audit_empty">لا توجد قيود مطابقة لمرشّحاتك</string>
+    <string name="audit_action">الإجراء</string>
+    <string name="audit_user">المستخدم</string>
+    <string name="audit_entity">الكيان</string>
+    <string name="audit_date">التاريخ</string>
+    <string name="audit_description">الوصف</string>
+    <string name="audit_ip">عنوان IP</string>
+    <string name="audit_filter_action">الإجراء</string>
+    <string name="audit_filter_user">المستخدم</string>
+    <string name="audit_all">الكل</string>
+    <string name="audit_system">النظام</string>
+
+    <!-- Audit actions -->
+    <string name="audit_LOGIN">تسجيل دخول</string>
+    <string name="audit_LOGOUT">تسجيل خروج</string>
+    <string name="audit_CHANGE_PASSWORD">تغيير كلمة المرور</string>
+    <string name="audit_CREATE_USER">إنشاء مستخدم</string>
+    <string name="audit_UPDATE_USER">تحديث مستخدم</string>
+    <string name="audit_CREATE_DRUG">إنشاء دواء</string>
+    <string name="audit_UPDATE_DRUG">تحديث دواء</string>
+    <string name="audit_DELETE_DRUG">حذف دواء</string>
+    <string name="audit_PURCHASE_STOCK">شراء مخزون</string>
+    <string name="audit_CREATE_CUSTOMER">إنشاء عميل</string>
+    <string name="audit_UPDATE_CUSTOMER">تحديث عميل</string>
+    <string name="audit_DELETE_CUSTOMER">حذف عميل</string>
+    <string name="audit_CREATE_SALE">إنشاء بيع</string>
+    <string name="audit_REFUND">استرجاع</string>
+    <string name="audit_CUSTOMER_PAYMENT">دفعة عميل</string>
+    <string name="audit_CUSTOMER_ADJUSTMENT">تسوية عميل</string>
+    <string name="audit_UPDATE_SETTINGS">تحديث الإعدادات</string>
+</resources>

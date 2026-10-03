@@ -1,3 +1,368 @@
 <resources>
-    <string name="app_name">lpms-android</string>
+    <string name="app_name">Larv Pharmacy</string>
+
+    <!-- ISO 4217 currency used for every price in the app.
+         Non-translatable: it is a data value, not prose. -->
+    <string name="currency_code" translatable="false">ILS</string>
+
+    <!-- Common actions -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_close">Close</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_new">New</string>
+    <string name="action_search">Search</string>
+    <string name="action_apply">Apply</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_view_all">View all</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_add">Add</string>
+    <string name="action_back">Back</string>
+
+    <!-- Generic states -->
+    <string name="common_loading">Loading…</string>
+    <string name="common_empty">Nothing here yet</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_network">Can\'t reach the server. Check your connection and try again.</string>
+    <string name="error_unauthorized">Your session has expired. Please sign in again.</string>
+    <string name="error_forbidden">You don\'t have permission to do that.</string>
+    <string name="error_not_found">Not found.</string>
+    <string name="error_rate_limited">Too many attempts. Please wait a moment and try again.</string>
+    <string name="field_required">This field is required</string>
+    <string name="confirm_delete">Delete \"%1$s\"? This cannot be undone.</string>
+
+    <!-- Sign in -->
+    <string name="login_title">Sign in</string>
+    <string name="login_subtitle">Larv Pharmacy Management</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_username_hint">Enter your username</string>
+    <string name="login_password_hint">Enter your password</string>
+    <string name="login_submit">Sign in</string>
+    <string name="login_submitting">Signing in…</string>
+    <string name="login_error_credentials">Invalid username or password</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_hide_password">Hide password</string>
+
+    <!-- Change password -->
+    <string name="change_password_title">Change password</string>
+    <string name="change_password_subtitle">You must set a new password before continuing.</string>
+    <string name="change_password_current">Current password</string>
+    <string name="change_password_new">New password</string>
+    <string name="change_password_confirm">Confirm new password</string>
+    <string name="change_password_rule">Use at least 8 characters</string>
+    <string name="change_password_mismatch">Passwords don\'t match</string>
+    <string name="change_password_done">Password changed</string>
+    <string name="change_password_submit">Update password</string>
+    <string name="change_password_sign_in_again">Sign in again</string>
+
+    <!-- Roles -->
+    <string name="role_employee">Employee</string>
+    <string name="role_pharmacist">Pharmacist</string>
+    <string name="role_admin">Administrator</string>
+
+    <!-- Language (endonyms stay in their own language) -->
+    <string name="language">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_arabic">العربية</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_sell">Sell</string>
+    <string name="nav_drugs">Drugs</string>
+    <string name="nav_customers">Customers</string>
+    <string name="nav_more">More</string>
+
+    <!-- Home / dashboard -->
+    <string name="home_title">Home</string>
+    <string name="home_signed_in_as">Signed in as %1$s</string>
+    <string name="home_section_language">App language</string>
+    <string name="home_version">Version %1$s</string>
+    <string name="home_quick_actions">Quick actions</string>
+    <string name="dashboard_today">Today</string>
+    <string name="dashboard_this_month">This month</string>
+    <string name="dashboard_inventory">Inventory</string>
+    <string name="dashboard_customers">Customers</string>
+    <string name="stat_revenue">Revenue</string>
+    <string name="stat_profit">Profit</string>
+    <string name="stat_sales">Sales</string>
+    <string name="stat_inventory_value">Stock value</string>
+    <string name="stat_low_stock">Low stock</string>
+    <string name="stat_expiring">Expiring soon</string>
+    <string name="stat_total_debt">Total debt</string>
+    <string name="stat_customers">Customers</string>
+    <string name="dashboard_top_selling">Top selling</string>
+    <string name="dashboard_units_sold">%1$s sold</string>
+
+    <!-- More -->
+    <string name="more_title">More</string>
+    <string name="more_section_operations">Operations</string>
+    <string name="more_section_reports">Reports</string>
+    <string name="more_section_administration">Administration</string>
+    <string name="more_section_preferences">Preferences</string>
+    <string name="more_sales_history">Sales history</string>
+    <string name="more_inventory">Inventory</string>
+    <string name="more_reports">Reports</string>
+    <string name="more_users">Users</string>
+    <string name="more_audit">Audit log</string>
+    <string name="more_settings">Settings</string>
+
+    <!-- Drugs -->
+    <string name="drugs_title">Drugs</string>
+    <string name="drugs_search_hint">Search name, barcode or generic name</string>
+    <string name="drugs_empty">No drugs match your search</string>
+    <string name="drugs_count">%1$s drugs</string>
+    <string name="drug_new">New drug</string>
+    <string name="drug_edit">Edit drug</string>
+    <string name="drug_name">Name</string>
+    <string name="drug_name_hint">Trade name</string>
+    <string name="drug_generic_name">Generic name</string>
+    <string name="drug_barcode">Barcode</string>
+    <string name="drug_manufacturer">Manufacturer</string>
+    <string name="drug_category">Category</string>
+    <string name="drug_dosage_form">Dosage form</string>
+    <string name="drug_strength">Strength</string>
+    <string name="drug_unit">Unit</string>
+    <string name="drug_description">Description</string>
+    <string name="drug_min_stock">Minimum stock level</string>
+    <string name="drug_quantity">Quantity in stock</string>
+    <string name="drug_active">Active (sellable)</string>
+    <string name="drug_saved">Drug saved</string>
+    <string name="drug_deleted">Drug deleted</string>
+    <string name="chip_low_stock">Low stock</string>
+    <string name="chip_inactive">Inactive</string>
+    <string name="chip_out_of_stock">Out of stock</string>
+
+    <!-- Dosage forms (index-aligned with the DosageForm enum) -->
+    <string-array name="dosage_form_labels">
+        <item>Tablet</item>
+        <item>Capsule</item>
+        <item>Syrup</item>
+        <item>Solution</item>
+        <item>Injection</item>
+        <item>Cream</item>
+        <item>Ointment</item>
+        <item>Gel</item>
+        <item>Drops</item>
+        <item>Inhaler</item>
+        <item>Spray</item>
+        <item>Powder</item>
+        <item>Patch</item>
+        <item>Suppository</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Sales -->
+    <string name="sales_title">Sales</string>
+    <string name="sales_empty">No sales in this period</string>
+    <string name="sales_total">Total</string>
+    <string name="sale_detail">Sale #%1$s</string>
+    <string name="sale_items">Items</string>
+    <string name="sale_subtotal">Subtotal</string>
+    <string name="sale_discount">Discount</string>
+    <string name="sale_total">Total</string>
+    <string name="sale_paid">Amount paid</string>
+    <string name="sale_due">Amount due</string>
+    <string name="sale_profit">Profit</string>
+    <string name="sale_cost">Cost</string>
+    <string name="sale_customer">Customer</string>
+    <string name="sale_cash_customer">Walk-in</string>
+    <string name="sale_created_by">Sold by</string>
+    <string name="sale_created_at">Date</string>
+    <string name="sale_refunded_total">Refunded</string>
+    <string name="sale_refund">Refund</string>
+    <string name="sale_refund_title">Refund sale #%1$s</string>
+    <string name="sale_refund_reason">Reason</string>
+    <string name="sale_refund_submit">Confirm refund</string>
+    <string name="sale_refunded">Refund recorded</string>
+    <string name="sale_status_completed">Completed</string>
+    <string name="sale_status_partially_refunded">Partially refunded</string>
+    <string name="sale_status_refunded">Refunded</string>
+    <string name="sale_refunded_qty">Refunded: %1$s</string>
+    <string name="sale_pending">Pending</string>
+
+    <!-- Payment methods -->
+    <string name="payment_cash">Cash</string>
+    <string name="payment_card">Card</string>
+    <string name="payment_credit">Credit</string>
+    <string name="payment_bank_transfer">Bank transfer</string>
+    <string name="payment_insurance">Insurance</string>
+
+    <!-- Point of sale -->
+    <string name="pos_title">New sale</string>
+    <string name="pos_search_hint">Search or scan a drug</string>
+    <string name="pos_cart">Cart</string>
+    <string name="pos_cart_empty">Tap a drug to add it to the cart</string>
+    <string name="pos_no_results">No drugs found</string>
+    <string name="pos_qty">Qty</string>
+    <string name="pos_unit_price">Unit price</string>
+    <string name="pos_line_total">Line total</string>
+    <string name="pos_customer">Customer</string>
+    <string name="pos_walk_in">Walk-in customer</string>
+    <string name="pos_payment_method">Payment method</string>
+    <string name="pos_discount">Discount</string>
+    <string name="pos_amount_paid">Amount paid</string>
+    <string name="pos_change">Change</string>
+    <string name="pos_checkout">Complete sale</string>
+    <string name="pos_processing">Processing…</string>
+    <string name="pos_sale_completed">Sale completed</string>
+    <string name="pos_items_count">%1$s items</string>
+    <string name="pos_insufficient_stock">Only %1$s in stock</string>
+    <string name="barcode_permission_needed">Camera access is needed to scan barcodes.</string>
+    <string name="barcode_scan">Scan barcode</string>
+    <string name="offline_banner">You are offline. Sales will be saved and sent when you reconnect.</string>
+
+    <!-- Customers -->
+    <string name="customers_title">Customers</string>
+    <string name="customers_search_hint">Search name or phone</string>
+    <string name="customers_empty">No customers match your search</string>
+    <string name="customer_new">New customer</string>
+    <string name="customer_edit">Edit customer</string>
+    <string name="customer_name">Name</string>
+    <string name="customer_phone">Phone</string>
+    <string name="customer_address">Address</string>
+    <string name="customer_notes">Notes</string>
+    <string name="customer_active">Active</string>
+    <string name="customer_saved">Customer saved</string>
+    <string name="customer_deleted">Customer deleted</string>
+    <string name="customer_account">Account</string>
+    <string name="customer_total_purchases">Total purchases</string>
+    <string name="customer_total_paid">Total paid</string>
+    <string name="customer_total_refunds">Total refunds</string>
+    <string name="customer_current_debt">Current balance</string>
+    <string name="customer_transactions">Transactions</string>
+    <string name="customer_transactions_empty">No transactions yet</string>
+    <string name="customer_record_payment">Record payment</string>
+    <string name="customer_record_adjustment">Record adjustment</string>
+    <string name="customer_amount">Amount</string>
+    <string name="customer_adjustment_direction">Direction</string>
+    <string name="customer_direction_debit">Debit (increase balance)</string>
+    <string name="customer_direction_credit">Credit (decrease balance)</string>
+    <string name="customer_adjustment_description">Description</string>
+    <string name="customer_in_debt">In debt</string>
+    <string name="customer_settled">Settled</string>
+    <string name="transaction_sale">Sale</string>
+    <string name="transaction_payment">Payment</string>
+    <string name="transaction_adjustment">Adjustment</string>
+    <string name="transaction_refund">Refund</string>
+
+    <!-- Inventory -->
+    <string name="inventory_title">Inventory</string>
+    <string name="inventory_tab_batches">Batches</string>
+    <string name="inventory_tab_low_stock">Low stock</string>
+    <string name="inventory_tab_expiring">Expiring</string>
+    <string name="inventory_tab_valuation">Valuation</string>
+    <string name="inventory_batches_empty">No batches match your filters</string>
+    <string name="inventory_low_stock_empty">Nothing is below its minimum level</string>
+    <string name="inventory_expiring_empty">Nothing is expiring in this window</string>
+    <string name="inventory_valuation_empty">No stock to value yet</string>
+    <string name="inventory_new_purchase">New purchase</string>
+    <string name="purchase_drug">Drug</string>
+    <string name="purchase_quantity">Quantity</string>
+    <string name="purchase_unit_price">Unit purchase price</string>
+    <string name="purchase_supplier">Supplier</string>
+    <string name="purchase_batch_number">Batch number</string>
+    <string name="purchase_expiry">Expiration date</string>
+    <string name="purchase_saved">Stock received</string>
+    <string name="batch_remaining">Remaining</string>
+    <string name="batch_received">Received</string>
+    <string name="batch_expiry">Expires</string>
+    <string name="batch_supplier">Supplier</string>
+    <string name="batch_expired">Expired</string>
+    <string name="batch_expiring_in">Expires in %1$s days</string>
+    <string name="valuation_total_qty">Qty</string>
+    <string name="valuation_cost">Stock cost</string>
+    <string name="valuation_avg">Avg. cost</string>
+    <string name="inventory_filter_expiring_days">Expiring within (days)</string>
+
+    <!-- Reports -->
+    <string name="reports_title">Reports</string>
+    <string name="report_daily">Daily</string>
+    <string name="report_weekly">Weekly</string>
+    <string name="report_monthly">Monthly</string>
+    <string name="report_custom">Custom range</string>
+    <string name="report_from">From</string>
+    <string name="report_to">To</string>
+    <string name="report_revenue">Revenue</string>
+    <string name="report_cost">Cost</string>
+    <string name="report_profit">Profit</string>
+    <string name="report_sales_count">Sales</string>
+    <string name="report_avg_sale">Average sale</string>
+    <string name="report_details">Line details</string>
+    <string name="report_details_empty">No lines in this range</string>
+    <string name="report_range_label">%1$s – %2$s</string>
+    <string name="report_margin">Margin</string>
+
+    <!-- Users -->
+    <string name="users_title">Users</string>
+    <string name="users_empty">No users match your filters</string>
+    <string name="user_new">New user</string>
+    <string name="user_edit">Edit user</string>
+    <string name="user_username">Username</string>
+    <string name="user_username_hint">letters, digits, . _ -</string>
+    <string name="user_role">Role</string>
+    <string name="user_password">Password</string>
+    <string name="user_password_hint">8–72 characters</string>
+    <string name="user_enabled">Enabled</string>
+    <string name="user_last_login">Last sign-in</string>
+    <string name="user_created">User created</string>
+    <string name="user_updated">User updated</string>
+    <string name="user_password_reset">Password reset</string>
+    <string name="user_status_updated">Status updated</string>
+    <string name="user_reset_password_title">Reset password for %1$s</string>
+    <string name="user_enabled_status">Enabled</string>
+    <string name="user_disabled_status">Disabled</string>
+    <string name="user_filter_role">Role</string>
+    <string name="user_filter_status">Status</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_inventory">Inventory</string>
+    <string name="settings_section_customers">Customers</string>
+    <string name="settings_allow_expired_sales">Allow selling expired stock</string>
+    <string name="settings_allow_expired_sales_desc">Stock from an expired batch can still be sold.</string>
+    <string name="settings_allow_negative_balance">Allow negative customer balance</string>
+    <string name="settings_allow_negative_balance_desc">Customers may go into credit with the pharmacy.</string>
+    <string name="settings_expiring_soon_days">Expiring soon window (days)</string>
+    <string name="settings_expiring_soon_days_desc">Default window used by the expiring-stock report.</string>
+    <string name="settings_saved">Settings saved</string>
+    <string name="settings_app">App</string>
+    <string name="settings_about">Version %1$s</string>
+
+    <!-- Audit -->
+    <string name="audit_title">Audit log</string>
+    <string name="audit_empty">No entries match your filters</string>
+    <string name="audit_action">Action</string>
+    <string name="audit_user">User</string>
+    <string name="audit_entity">Entity</string>
+    <string name="audit_date">Date</string>
+    <string name="audit_description">Description</string>
+    <string name="audit_ip">IP</string>
+    <string name="audit_filter_action">Action</string>
+    <string name="audit_filter_user">User</string>
+    <string name="audit_all">All</string>
+    <string name="audit_system">System</string>
+
+    <!-- Audit actions -->
+    <string name="audit_LOGIN">Sign in</string>
+    <string name="audit_LOGOUT">Sign out</string>
+    <string name="audit_CHANGE_PASSWORD">Password changed</string>
+    <string name="audit_CREATE_USER">User created</string>
+    <string name="audit_UPDATE_USER">User updated</string>
+    <string name="audit_CREATE_DRUG">Drug created</string>
+    <string name="audit_UPDATE_DRUG">Drug updated</string>
+    <string name="audit_DELETE_DRUG">Drug deleted</string>
+    <string name="audit_PURCHASE_STOCK">Stock purchased</string>
+    <string name="audit_CREATE_CUSTOMER">Customer created</string>
+    <string name="audit_UPDATE_CUSTOMER">Customer updated</string>
+    <string name="audit_DELETE_CUSTOMER">Customer deleted</string>
+    <string name="audit_CREATE_SALE">Sale created</string>
+    <string name="audit_REFUND">Refund</string>
+    <string name="audit_CUSTOMER_PAYMENT">Customer payment</string>
+    <string name="audit_CUSTOMER_ADJUSTMENT">Customer adjustment</string>
+    <string name="audit_UPDATE_SETTINGS">Settings updated</string>
 </resources>
