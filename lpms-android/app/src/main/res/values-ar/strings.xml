@@ -278,6 +278,7 @@
     <string name="valuation_total_qty">الكمية</string>
     <string name="valuation_cost">تكلفة المخزون</string>
     <string name="valuation_avg">متوسط التكلفة</string>
+    <string name="valuation_weighted_avg">متوسط التكلفة المرجح</string>
     <string name="inventory_filter_expiring_days">تنتهي خلال (أيام)</string>
 
     <!-- Reports -->
@@ -331,6 +332,11 @@
     <string name="settings_expiring_soon_days">مدة «تنتهي قريباً» (أيام)</string>
     <string name="settings_expiring_soon_days_desc">المدة الافتراضية لتقرير الأدوية المنتهية.</string>
     <string name="settings_saved">تم حفظ الإعدادات</string>
+    <string name="settings_theme">المظهر</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+    <string name="settings_section_account">الحساب</string>
+    <string name="settings_section_preferences">التفضيلات</string>
     <string name="settings_app">التطبيق</string>
     <string name="settings_about">الإصدار %1$s</string>
 

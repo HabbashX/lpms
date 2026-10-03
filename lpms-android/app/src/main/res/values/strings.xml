@@ -278,6 +278,7 @@
     <string name="valuation_total_qty">Qty</string>
     <string name="valuation_cost">Stock cost</string>
     <string name="valuation_avg">Avg. cost</string>
+    <string name="valuation_weighted_avg">Weighted avg. cost</string>
     <string name="inventory_filter_expiring_days">Expiring within (days)</string>
 
     <!-- Reports -->
@@ -331,6 +332,11 @@
     <string name="settings_expiring_soon_days">Expiring soon window (days)</string>
     <string name="settings_expiring_soon_days_desc">Default window used by the expiring-stock report.</string>
     <string name="settings_saved">Settings saved</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_section_preferences">Preferences</string>
     <string name="settings_app">App</string>
     <string name="settings_about">Version %1$s</string>
 

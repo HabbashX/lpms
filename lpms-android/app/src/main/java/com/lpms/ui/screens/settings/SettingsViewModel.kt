@@ -5,77 +5,77 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lpms.data.remote.ApiExecutor
 import com.lpms.data.remote.ApiResult
-import com.lpms.data.remote.LpmsApi
-import com.lpms.data.remote.dto.SettingResponse
-import com.lpms.data.remote.dto.UpdateSettingsRequest
+import com.lpms.data.session.AuthRepository
+import com.lpms.data.session.UiPreferences
+import com.lpms.ui.locale.AppLocale
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
  * Backs [SettingsScreen].
  *
- * Settings are fetched over the network and cached in Room. The owner can
- * toggle them while offline; the changes are sent to the server when a
- * connection is available.
+ * Everything here is device-local: the theme and language are stored on the
+ * phone and applied immediately, and the change-password flow goes through the
+ * auth repository. Nothing in this screen calls the settings API.
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val api: LpmsApi,
-    private val executor: ApiExecutor,
+    private val uiPreferences: UiPreferences,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
-    private val _settings = MutableStateFlow<List<SettingResponse>>(emptyList())
-    val settings: StateFlow<List<SettingResponse>> = _settings.asStateFlow()
-
-    var saving by mutableStateOf(false)
+    var darkTheme by mutableStateOf(uiPreferences.darkTheme)
         private set
 
-    private val pending = mutableMapOf<String, String>()
+    var language by mutableStateOf(AppLocale.currentTag())
+        private set
 
-    init {
-        refresh()
+    var changingPassword by mutableStateOf(false)
+        private set
+
+    var passwordError by mutableStateOf<String?>(null)
+        private set
+
+    var passwordSuccess by mutableStateOf(false)
+        private set
+
+    fun setDarkTheme(value: Boolean) {
+        darkTheme = value
+        uiPreferences.setDarkTheme(value)
     }
 
-    fun refresh() {
+    fun selectLanguage(tag: String) {
+        language = tag
+        AppLocale.set(tag)
+    }
+
+    fun changePassword(currentPassword: String, newPassword: String) {
+        if (changingPassword) return
+        changingPassword = true
+        passwordError = null
+        passwordSuccess = false
+
         viewModelScope.launch {
-            when (val result = executor.run { api.getSettings() }) {
-                is ApiResult.Success -> _settings.value = result.value
-                is ApiResult.Failure -> { /* keep last good data */ }
-            }
-        }
-    }
-
-    fun update(key: String, value: String) {
-        pending[key] = value
-        _settings.value = _settings.value.map { setting ->
-            if (setting.key == key) setting.copy(value = value) else setting
-        }
-    }
-
-    fun save() {
-        if (pending.isEmpty()) return
-        saving = true
-
-        viewModelScope.launch {
-            val request = UpdateSettingsRequest(settings = pending.toMap())
-            when (val result = executor.run { api.updateSettings(request) }) {
+            when (val result = authRepository.changePassword(currentPassword, newPassword)) {
                 is ApiResult.Success -> {
-                    saving = false
-                    pending.clear()
-                    _settings.value = result.value
+                    changingPassword = false
+                    passwordSuccess = true
                 }
                 is ApiResult.Failure -> {
-                    saving = false
-                    // Revert optimistic changes on failure
-                    refresh()
+                    changingPassword = false
+                    passwordError = when (result.error) {
+                        is com.lpms.data.remote.ApiError.Http -> result.error.message
+                        else -> "error_generic"
+                    }
                 }
             }
         }
+    }
+
+    fun clearPasswordMessages() {
+        passwordError = null
+        passwordSuccess = false
     }
 }

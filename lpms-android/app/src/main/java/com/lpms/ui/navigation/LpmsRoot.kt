@@ -55,8 +55,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun LpmsRoot() {
     val money = stringResource(R.string.currency_code)
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+    val darkTheme = sessionViewModel.darkTheme
 
-    LpmsTheme {
+    LpmsTheme(darkTheme = darkTheme ?: androidx.compose.foundation.isSystemInDarkTheme()) {
         CompositionLocalProvider(LocalMoney provides MoneyFormatter(money)) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
@@ -150,9 +152,12 @@ sealed interface RestoreState {
 class SessionViewModel @Inject constructor(
     sessionStore: SessionStore,
     private val authRepository: AuthRepository,
+    private val uiPreferences: com.lpms.data.session.UiPreferences,
 ) : ViewModel() {
 
     val authState: StateFlow<AuthState> = sessionStore.authState
+
+    val darkTheme: Boolean? = uiPreferences.darkTheme
 
     private val _restoreState = MutableStateFlow<RestoreState>(RestoreState.Checking)
     val restoreState: StateFlow<RestoreState> = _restoreState.asStateFlow()

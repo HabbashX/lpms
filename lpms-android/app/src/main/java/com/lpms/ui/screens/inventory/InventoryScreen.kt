@@ -268,6 +268,11 @@ private fun ValuationTab(viewModel: InventoryViewModel) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Text(
+                    text = "${stringResource(R.string.valuation_avg)}: ${money(item.weightedAverageCost)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

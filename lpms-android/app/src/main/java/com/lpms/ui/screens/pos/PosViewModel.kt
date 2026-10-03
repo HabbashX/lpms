@@ -140,6 +140,32 @@ class PosViewModel @Inject constructor(
         }
     }
 
+    /** Adds a drug to the cart with a specific quantity. */
+    fun addToCartWithQuantity(drug: DrugEntity, quantity: Int) {
+        if (quantity <= 0) return
+        error = null
+        val existing = cart.indexOfFirst { it.drugLocalId == drug.localId }
+        if (existing >= 0) {
+            val line = cart[existing]
+            if (line.quantity + quantity > drug.currentQuantity) {
+                error = ApiError.Http(409, "INSUFFICIENT_STOCK", "insufficient_stock")
+                return
+            }
+            cart[existing] = line.copy(quantity = line.quantity + quantity)
+        } else {
+            if (quantity > drug.currentQuantity) {
+                error = ApiError.Http(409, "INSUFFICIENT_STOCK", "insufficient_stock")
+                return
+            }
+            cart += CartLine(
+                drugLocalId = drug.localId,
+                drugName = drug.name,
+                quantity = quantity,
+                unitSellingPrice = drug.lastSellPrice ?: 0.0,
+            )
+        }
+    }
+
     fun updateQuantity(drugLocalId: String, quantity: Int) {
         val index = cart.indexOfFirst { it.drugLocalId == drugLocalId }
         if (index < 0) return

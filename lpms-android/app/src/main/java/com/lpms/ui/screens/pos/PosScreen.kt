@@ -78,6 +78,7 @@ fun PosScreen(
     var showScanner by remember { mutableStateOf(false) }
     var showCustomerPicker by remember { mutableStateOf(false) }
     var showReceipt by remember { mutableStateOf(false) }
+    var quantityDrug by remember { mutableStateOf<DrugEntity?>(null) }
 
     val completedSaleId = viewModel.completedSaleId
     if (completedSaleId != null && !showReceipt) {
@@ -135,7 +136,7 @@ fun PosScreen(
                 items(filtered, key = { it.localId }) { drug ->
                     DrugRow(
                         drug = drug,
-                        onAdd = { viewModel.addToCart(drug) },
+                        onAdd = { quantityDrug = drug },
                     )
                 }
             }
@@ -157,6 +158,17 @@ fun PosScreen(
                 showCustomerPicker = false
             },
             onDismiss = { showCustomerPicker = false },
+        )
+    }
+
+    quantityDrug?.let { drug ->
+        QuantityDialog(
+            drug = drug,
+            onDismiss = { quantityDrug = null },
+            onConfirm = { quantity ->
+                viewModel.addToCartWithQuantity(drug, quantity)
+                quantityDrug = null
+            },
         )
     }
 
@@ -663,6 +675,60 @@ private fun SaleReceiptDialog(
         confirmButton = {
             TextButton(onClick = onNewSale) {
                 Text(stringResource(R.string.action_new))
+            }
+        },
+    )
+}
+
+@Composable
+private fun QuantityDialog(
+    drug: DrugEntity,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+) {
+    var quantity by remember { mutableStateOf("1") }
+    val max = drug.currentQuantity
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(drug.name) },
+        text = {
+            Column {
+                Text(
+                    text = "${stringResource(R.string.pos_qty)} (max $max)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { value ->
+                        val parsed = value.toIntOrNull()
+                        if (parsed != null && parsed in 1..max) {
+                            quantity = value
+                        } else if (value.isEmpty()) {
+                            quantity = ""
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val parsed = quantity.toIntOrNull() ?: 1
+                    onConfirm(parsed.coerceIn(1, max))
+                },
+            ) {
+                Text(stringResource(R.string.action_add))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
