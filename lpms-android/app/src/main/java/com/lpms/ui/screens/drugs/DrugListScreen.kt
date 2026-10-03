@@ -103,7 +103,7 @@ fun DrugListScreen(
                     items(filtered, key = { it.localId }) { drug ->
                         DrugCard(
                             drug = drug,
-                            onClick = { onNavigate("drug?drugId=${drug.serverId ?: -1}") },
+                            onClick = { onNavigate("drug/${drug.localId}") },
                         )
                     }
                 }
