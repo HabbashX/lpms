@@ -130,7 +130,7 @@ fun LpmsStatusChip(
 ) {
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.Small,
+        shape = MaterialTheme.shapes.small,
         color = container,
     ) {
         Text(
