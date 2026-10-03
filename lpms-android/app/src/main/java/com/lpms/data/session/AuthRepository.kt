@@ -120,6 +120,10 @@ class AuthRepository @Inject constructor(
         mustChangePassword = mustChangePassword,
     )
 
-    private fun String.asRole(): Role =
-        entries.firstOrNull { it.name == this } ?: Role.EMPLOYEE
+    private fun String.asRole(): Role {
+        for (role in Role.values()) {
+            if (role.name == this) return role
+        }
+        return Role.EMPLOYEE
+    }
 }
