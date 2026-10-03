@@ -170,6 +170,7 @@
     <string name="sale_profit">الربح</string>
     <string name="sale_cost">التكلفة</string>
     <string name="sale_customer">العميل</string>
+    <string name="sale_payment_method">طريقة الدفع</string>
     <string name="sale_cash_customer">زبون عابر</string>
     <string name="sale_created_by">باعه</string>
     <string name="sale_created_at">التاريخ</string>

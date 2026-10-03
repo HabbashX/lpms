@@ -170,6 +170,7 @@
     <string name="sale_profit">Profit</string>
     <string name="sale_cost">Cost</string>
     <string name="sale_customer">Customer</string>
+    <string name="sale_payment_method">Payment method</string>
     <string name="sale_cash_customer">Walk-in</string>
     <string name="sale_created_by">Sold by</string>
     <string name="sale_created_at">Date</string>
