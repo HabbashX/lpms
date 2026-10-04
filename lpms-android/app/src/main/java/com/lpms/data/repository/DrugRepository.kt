@@ -36,6 +36,10 @@ data class DrugDraft(
     val description: String? = null,
     val minimumStockLevel: Int = 0,
     val active: Boolean = true,
+    /** Initial stock quantity when creating a new drug. */
+    val initialStock: Int = 0,
+    /** Purchase price per unit for the initial stock. */
+    val initialStockPrice: Double = 0.0,
 )
 
 /**
@@ -111,6 +115,24 @@ class DrugRepository @Inject constructor(
             updatedAt = now,
         )
         drugDao.upsert(entity)
+
+        val initialStock = draft.initialStock
+        val initialStockPrice = draft.initialStockPrice
+
+        if (existing == null && initialStock > 0) {
+            drugDao.incrementStock(id, initialStock)
+            sync.enqueue(
+                SyncOperation.CREATE_PURCHASE,
+                id,
+                json.encodeToString(
+                    PendingPurchase(
+                        drugLocalId = id,
+                        quantity = initialStock,
+                        unitPurchasePrice = initialStockPrice,
+                    ),
+                ),
+            )
+        }
 
         // A brand-new drug is a CREATE. Editing an existing row is always an
         // UPDATE, even when the server has not seen it yet: the replay loop

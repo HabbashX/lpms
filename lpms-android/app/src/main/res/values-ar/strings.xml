@@ -129,6 +129,8 @@
     <string name="drug_unit">الوحدة</string>
     <string name="drug_description">الوصف</string>
     <string name="drug_min_stock">حد المخزون الأدنى</string>
+    <string name="drug_initial_stock">كمية المخزون الأولية</string>
+    <string name="drug_initial_stock_price">سعر المخزون الأولي</string>
     <string name="drug_quantity">الكمية في المخزون</string>
     <string name="drug_active">مفعّل (قابل للبيع)</string>
     <string name="drug_saved">تم حفظ الدواء</string>

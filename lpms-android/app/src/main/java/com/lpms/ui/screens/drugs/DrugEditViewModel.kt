@@ -44,6 +44,10 @@ class DrugEditViewModel @Inject constructor(
         private set
     var active by mutableStateOf(true)
         private set
+    var initialStock by mutableStateOf("")
+        private set
+    var initialStockPrice by mutableStateOf("")
+        private set
 
     var saving by mutableStateOf(false)
         private set
@@ -93,6 +97,8 @@ class DrugEditViewModel @Inject constructor(
     fun onDescriptionChange(value: String) { description = value }
     fun onMinStockChange(value: String) { minimumStockLevel = value }
     fun onActiveChange(value: Boolean) { active = value }
+    fun onInitialStockChange(value: String) { initialStock = value }
+    fun onInitialStockPriceChange(value: String) { initialStockPrice = value }
 
     private fun clearErrors() {
         error = null
@@ -130,6 +136,8 @@ class DrugEditViewModel @Inject constructor(
             description = description.trim().ifEmpty { null },
             minimumStockLevel = minimumStockLevel.toIntOrNull() ?: 0,
             active = active,
+            initialStock = initialStock.toIntOrNull() ?: 0,
+            initialStockPrice = initialStockPrice.toDoubleOrNull() ?: 0.0,
         )
 
         viewModelScope.launch {

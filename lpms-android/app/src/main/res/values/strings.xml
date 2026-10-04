@@ -129,6 +129,8 @@
     <string name="drug_unit">Unit</string>
     <string name="drug_description">Description</string>
     <string name="drug_min_stock">Minimum stock level</string>
+    <string name="drug_initial_stock">Initial stock quantity</string>
+    <string name="drug_initial_stock_price">Initial stock price</string>
     <string name="drug_quantity">Quantity in stock</string>
     <string name="drug_active">Active (sellable)</string>
     <string name="drug_saved">Drug saved</string>

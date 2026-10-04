@@ -133,6 +133,22 @@ fun DrugEditScreen(
                 keyboardType = KeyboardType.Number,
             )
 
+            if (isNew) {
+                LpmsTextField(
+                    value = viewModel.initialStock,
+                    onValueChange = viewModel::onInitialStockChange,
+                    label = stringResource(R.string.drug_initial_stock),
+                    keyboardType = KeyboardType.Number,
+                )
+
+                LpmsTextField(
+                    value = viewModel.initialStockPrice,
+                    onValueChange = viewModel::onInitialStockPriceChange,
+                    label = stringResource(R.string.drug_initial_stock_price),
+                    keyboardType = KeyboardType.Decimal,
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
