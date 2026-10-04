@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">Larv Pharmacy</string>
 
+    <!-- Sync state -->
+    <string name="sync_synced">Synced</string>
+    <string name="sync_syncing">Syncing %d pending</string>
+    <string name="sync_blocked">%d blocked</string>
+    <string name="sync_offline">Offline</string>
+
     <!-- ISO 4217 currency used for every price in the app.
          Non-translatable: it is a data value, not prose. -->
     <string name="currency_code" translatable="false">ILS</string>

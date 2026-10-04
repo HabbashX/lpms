@@ -1,5 +1,6 @@
 package com.lpms.ui.screens.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,13 +10,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.PeopleAlt
 import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -34,6 +41,8 @@ import com.lpms.R
 import com.lpms.data.model.AuthUser
 import com.lpms.data.model.Role
 import com.lpms.data.remote.dto.DashboardResponse
+import com.lpms.data.sync.SyncEngine
+import com.lpms.data.sync.SyncState
 import com.lpms.ui.components.LpmsIconAction
 import com.lpms.ui.components.LpmsSectionHeader
 import com.lpms.ui.components.LpmsStatCard
@@ -56,6 +65,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val dashboard by viewModel.dashboard.collectAsStateWithLifecycle()
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle(SyncState())
 
     Scaffold(
         topBar = { LpmsTopBar(title = stringResource(R.string.home_title)) },
@@ -68,11 +78,18 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                Text(
-                    text = stringResource(R.string.home_signed_in_as, user.username),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_signed_in_as, user.username),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    SyncStatusIndicator(syncState = syncState)
+                }
             }
 
             if (dashboard != null) {
@@ -251,5 +268,51 @@ private fun QuickActions(
                 modifier = Modifier.weight(1f),
             )
         }
+    }
+}
+
+@Composable
+fun SyncStatusIndicator(syncState: SyncState) {
+    val (color, text) = when {
+        syncState.online && syncState.pending > 0 -> {
+            MaterialTheme.colorScheme.primary to stringResource(R.string.sync_syncing, syncState.pending)
+        }
+        syncState.online && syncState.blocked > 0 -> {
+            MaterialTheme.colorScheme.error to stringResource(R.string.sync_blocked, syncState.blocked)
+        }
+        syncState.online -> {
+            MaterialTheme.colorScheme.primary to stringResource(R.string.sync_synced)
+        }
+        else -> {
+            MaterialTheme.colorScheme.onSurfaceVariant to stringResource(R.string.sync_offline)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest, RoundedCornerShape(8.dp)),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        androidx.compose.material3.Icon(
+            imageVector = when {
+                syncState.online && syncState.pending > 0 -> Icons.Outlined.Sync
+                syncState.online && syncState.blocked > 0 -> Icons.Outlined.Error
+                syncState.online -> Icons.Outlined.CheckCircle
+                else -> Icons.Outlined.CloudOff
+            },
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+            modifier = Modifier.padding(vertical = 8.dp),
+        )
     }
 }

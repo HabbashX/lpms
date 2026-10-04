@@ -9,6 +9,7 @@ import com.lpms.data.remote.ApiResult
 import com.lpms.data.remote.LpmsApi
 import com.lpms.data.remote.dto.DashboardResponse
 import com.lpms.data.sync.SyncEngine
+import com.lpms.data.sync.SyncState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject
@@ -37,6 +38,9 @@ class HomeViewModel @Inject constructor(
 
     private val _dashboard = MutableStateFlow<DashboardResponse?>(null)
     val dashboard: StateFlow<DashboardResponse?> = _dashboard.asStateFlow()
+
+    /** Expose sync state so UI can show pending/online/offline. */
+    val syncState: StateFlow<SyncState> = sync.state
 
     init {
         observeTodaySales()

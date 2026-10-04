@@ -217,6 +217,11 @@ class SaleRepository @Inject constructor(
             ),
         )
 
+        // Immediately attempt to push this sale if online (don't wait for background drain)
+        if (sync.state.value.online) {
+            sync.kick()
+        }
+
         return ApiResult.Success(localId)
     }
 

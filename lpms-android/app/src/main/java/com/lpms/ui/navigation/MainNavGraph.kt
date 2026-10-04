@@ -64,13 +64,17 @@ fun MainNavGraph(
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute in BOTTOM_BAR_ROUTES
 
+    val navigateBottomBar: (String) -> Unit = { navController.navigateTo(it, isBottomBar = true) }
+    val navigateInternal: (String) -> Unit = { navController.navigateTo(it) }
+    val back: () -> Unit = { navController.popBackStack() }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 LpmsBottomBar(
                     currentRoute = currentRoute,
-                    onNavigate = { route -> navController.navigateTo(route) },
+                    onNavigate = navigateBottomBar,
                 )
             }
         },
@@ -80,29 +84,27 @@ fun MainNavGraph(
             startDestination = Routes.Home,
             modifier = Modifier.padding(padding),
         ) {
-            val navigate: (String) -> Unit = { navController.navigateTo(it) }
-            val back: () -> Unit = { navController.popBackStack() }
 
             composable(Routes.Home) {
                 HomeScreen(
                     user = user,
-                    onNavigate = navigate,
+                    onNavigate = navigateInternal,
                     snackbarHostState = snackbarHostState,
                 )
             }
             composable(Routes.More) {
                 MoreScreen(
-                    onNavigate = navigate,
+                    onNavigate = navigateInternal,
                     role = user.role,
                     onSignOut = onSignOut,
                 )
             }
 
-            composable(Routes.Pos) { PosScreen(onNavigate = navigate, onBack = back) }
-            composable(Routes.Drugs) { DrugListScreen(onNavigate = navigate) }
-            composable(Routes.Customers) { CustomerListScreen(onNavigate = navigate) }
+            composable(Routes.Pos) { PosScreen(onNavigate = navigateInternal, onBack = back) }
+            composable(Routes.Drugs) { DrugListScreen(onNavigate = navigateInternal) }
+            composable(Routes.Customers) { CustomerListScreen(onNavigate = navigateInternal) }
 
-            composable(Routes.Sales) { SalesScreen(onNavigate = navigate, onBack = back) }
+            composable(Routes.Sales) { SalesScreen(onNavigate = navigateInternal, onBack = back) }
             composable(
                 route = Routes.SaleDetail,
                 arguments = listOf(navArgument(Routes.ArgSaleId) {
@@ -111,7 +113,7 @@ fun MainNavGraph(
             ) { entry ->
                 SaleDetailScreen(
                     saleId = entry.arguments?.getString(Routes.ArgSaleId) ?: "",
-                    onNavigate = navigate,
+                    onNavigate = navigateInternal,
                     onBack = back,
                 )
             }
@@ -143,13 +145,13 @@ fun MainNavGraph(
                 } else {
                     CustomerDetailScreen(
                         customerId = customerId,
-                        onNavigate = navigate,
+                        onNavigate = navigateInternal,
                         onBack = back,
                     )
                 }
             }
 
-            composable(Routes.Inventory) { InventoryScreen(onNavigate = navigate, onBack = back) }
+            composable(Routes.Inventory) { InventoryScreen(onNavigate = navigateInternal, onBack = back) }
             composable(Routes.Reports) { ReportsScreen(onBack = back) }
             composable(Routes.Users) { UsersScreen(onBack = back) }
             composable(Routes.Audit) { AuditScreen(onBack = back) }
@@ -158,10 +160,13 @@ fun MainNavGraph(
     }
 }
 
-private fun NavHostController.navigateTo(route: String) {
+private fun NavHostController.navigateTo(route: String, isBottomBar: Boolean = false) {
     navigate(route) {
         launchSingleTop = true
         restoreState = true
+        if (isBottomBar) {
+            popUpTo(graph.findStartDestination().id) { saveState = true }
+        }
     }
 }
 

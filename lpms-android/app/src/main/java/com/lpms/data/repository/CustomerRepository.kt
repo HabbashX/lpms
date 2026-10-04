@@ -97,6 +97,8 @@ class CustomerRepository @Inject constructor(
         }
         sync.enqueue(operation, id, payload)
 
+        if (sync.state.value.online) sync.kick()
+
         return ApiResult.Success(id)
     }
 
@@ -143,6 +145,7 @@ class CustomerRepository @Inject constructor(
                 ),
             ),
         )
+        if (sync.state.value.online) sync.kick()
         return ApiResult.Success(Unit)
     }
 
@@ -179,6 +182,8 @@ class CustomerRepository @Inject constructor(
                 ),
             ),
         )
+        if (sync.state.value.online) sync.kick()
+        return ApiResult.Success(Unit)
         return ApiResult.Success(Unit)
     }
 

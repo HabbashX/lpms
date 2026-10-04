@@ -148,6 +148,8 @@ class DrugRepository @Inject constructor(
         }
         sync.enqueue(operation, id, payload)
 
+        if (sync.state.value.online) sync.kick()
+
         return ApiResult.Success(id)
     }
 

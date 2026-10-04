@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">صيدلية لارف</string>
 
+    <!-- Sync state -->
+    <string name="sync_synced">تمت المزامنة</string>
+    <string name="sync_syncing">جارٍ مزامنة %d معلّقة</string>
+    <string name="sync_blocked">%d محظورة</string>
+    <string name="sync_offline">غير متصل</string>
+
     <!-- ISO 4217 currency used for every price in the app.
          Non-translatable: it is a data value, not prose. -->
     <string name="currency_code" translatable="false">ILS</string>
