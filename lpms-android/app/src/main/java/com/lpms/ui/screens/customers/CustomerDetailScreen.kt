@@ -30,6 +30,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,8 @@ import com.lpms.data.repository.CustomerAccountSnapshot
 import com.lpms.data.remote.dto.TransactionResponse
 import com.lpms.ui.components.LpmsCard
 import com.lpms.ui.components.LpmsDetailRow
+import com.lpms.ui.components.LpmsEmptyState
+import com.lpms.ui.components.LpmsLoading
 import com.lpms.ui.components.LpmsDropdownField
 import com.lpms.ui.components.LpmsPrimaryButton
 import com.lpms.ui.components.LpmsSecondaryButton
@@ -73,9 +77,14 @@ fun CustomerDetailScreen(
 ) {
     val customer by viewModel.customer.collectAsStateWithLifecycle()
     val account by viewModel.account.collectAsStateWithLifecycle()
+    val notFound by remember {
+        derivedStateOf { viewModel.error != null && customer == null }
+    }
 
     var showPaymentDialog by remember { mutableStateOf(false) }
     var showAdjustmentDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(customerId) { viewModel.load(customerId) }
 
     Scaffold(
         topBar = {
@@ -85,52 +94,60 @@ fun CustomerDetailScreen(
             )
         },
     ) { padding ->
-        if (customer == null) {
-            com.lpms.ui.components.LpmsLoading(modifier = Modifier.padding(padding))
-            return@Scaffold
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CustomerSummaryCard(customer = customer!!, account = account)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                LpmsPrimaryButton(
-                    text = stringResource(R.string.customer_record_payment),
-                    onClick = { showPaymentDialog = true },
-                    modifier = Modifier.weight(1f),
-                )
-                LpmsSecondaryButton(
-                    text = stringResource(R.string.customer_record_adjustment),
-                    onClick = { showAdjustmentDialog = true },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            Text(
-                text = stringResource(R.string.customer_transactions),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        when {
+            // A missing customer must not leave this screen spinning forever.
+            notFound -> LpmsEmptyState(
+                title = stringResource(R.string.customer_not_found),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             )
 
-            if (account == null || account!!.transactions.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.customer_transactions_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                account!!.transactions.forEach { transaction ->
-                    TransactionRow(transaction = transaction)
+            customer == null -> LpmsLoading(modifier = Modifier.padding(padding))
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CustomerSummaryCard(customer = customer!!, account = account)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        LpmsPrimaryButton(
+                            text = stringResource(R.string.customer_record_payment),
+                            onClick = { showPaymentDialog = true },
+                            modifier = Modifier.weight(1f),
+                        )
+                        LpmsSecondaryButton(
+                            text = stringResource(R.string.customer_record_adjustment),
+                            onClick = { showAdjustmentDialog = true },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.customer_transactions),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (account == null || account!!.transactions.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.customer_transactions_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        account!!.transactions.forEach { transaction ->
+                            TransactionRow(transaction = transaction)
+                        }
+                    }
                 }
             }
         }
@@ -158,7 +175,7 @@ fun CustomerDetailScreen(
 }
 
 @Composable
-private fun CustomerSummaryCard(
+fun CustomerSummaryCard(
     customer: CustomerEntity,
     account: CustomerAccountSnapshot?,
 ) {
@@ -211,7 +228,7 @@ private fun CustomerSummaryCard(
 }
 
 @Composable
-private fun TransactionRow(transaction: TransactionResponse) {
+fun TransactionRow(transaction: TransactionResponse) {
     LpmsCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -263,7 +280,7 @@ private fun TransactionRow(transaction: TransactionResponse) {
 }
 
 @Composable
-private fun PaymentDialog(
+fun PaymentDialog(
     onDismiss: () -> Unit,
     onConfirm: (Double, String, String?) -> Unit,
 ) {
@@ -315,7 +332,7 @@ private fun PaymentDialog(
 }
 
 @Composable
-private fun AdjustmentDialog(
+fun AdjustmentDialog(
     onDismiss: () -> Unit,
     onConfirm: (Double, String, String) -> Unit,
 ) {

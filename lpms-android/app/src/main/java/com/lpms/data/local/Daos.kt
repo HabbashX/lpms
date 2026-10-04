@@ -33,6 +33,9 @@ interface OutboxDao {
     @Query("SELECT COUNT(*) FROM outbox WHERE blocked = 0")
     fun observePendingCount(): Flow<Int>
 
+    @Query("DELETE FROM outbox WHERE entityLocalId = :entityId")
+    suspend fun deleteByEntityId(entityId: String)
+
     @Query("SELECT COUNT(*) FROM outbox WHERE blocked = 1")
     fun observeBlockedCount(): Flow<Int>
 
@@ -186,6 +189,10 @@ interface SaleDao {
 
     @Query("SELECT * FROM sales ORDER BY createdAt DESC, rowid DESC")
     fun observeAll(): Flow<List<SaleEntity>>
+
+    /** Sales recorded at or after [since]; used for the dashboard's live day totals. */
+    @Query("SELECT * FROM sales WHERE createdAt >= :since ORDER BY createdAt ASC")
+    fun observeSince(since: Long): Flow<List<SaleEntity>>
 
     @Query("SELECT * FROM sales WHERE serverId IS NULL ORDER BY createdAt ASC")
     fun observePending(): Flow<List<SaleEntity>>

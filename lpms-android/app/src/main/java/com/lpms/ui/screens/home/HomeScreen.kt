@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Inventory
@@ -208,52 +205,51 @@ private fun QuickActions(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(8.dp))
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+        Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item {
-                LpmsIconAction(
-                    icon = Icons.Outlined.PointOfSale,
-                    label = stringResource(R.string.nav_sell),
-                    onClick = { onNavigate("pos") },
-                )
-            }
-            item {
-                LpmsIconAction(
-                    icon = Icons.Outlined.Inventory,
-                    label = stringResource(R.string.nav_drugs),
-                    onClick = { onNavigate("drugs") },
-                )
-            }
-            item {
-                LpmsIconAction(
-                    icon = Icons.Outlined.PeopleAlt,
-                    label = stringResource(R.string.nav_customers),
-                    onClick = { onNavigate("customers") },
-                )
-            }
-            item {
-                LpmsIconAction(
-                    icon = Icons.Outlined.Assessment,
-                    label = stringResource(R.string.more_reports),
-                    onClick = { onNavigate("reports") },
-                )
-            }
-            item {
-                LpmsIconAction(
-                    icon = Icons.Outlined.Settings,
-                    label = stringResource(R.string.more_settings),
-                    onClick = { onNavigate("settings") },
-                    tint = if (user.role == Role.ADMIN) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
+            LpmsIconAction(
+                icon = Icons.Outlined.PointOfSale,
+                label = stringResource(R.string.nav_sell),
+                onClick = { onNavigate("pos") },
+                modifier = Modifier.weight(1f),
+            )
+            LpmsIconAction(
+                icon = Icons.Outlined.Inventory,
+                label = stringResource(R.string.nav_drugs),
+                onClick = { onNavigate("drugs") },
+                modifier = Modifier.weight(1f),
+            )
+            LpmsIconAction(
+                icon = Icons.Outlined.PeopleAlt,
+                label = stringResource(R.string.nav_customers),
+                onClick = { onNavigate("customers") },
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            LpmsIconAction(
+                icon = Icons.Outlined.Assessment,
+                label = stringResource(R.string.more_reports),
+                onClick = { onNavigate("reports") },
+                modifier = Modifier.weight(1f),
+            )
+            LpmsIconAction(
+                icon = Icons.Outlined.Settings,
+                label = stringResource(R.string.more_settings),
+                onClick = { onNavigate("settings") },
+                tint = if (user.role == Role.ADMIN) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }

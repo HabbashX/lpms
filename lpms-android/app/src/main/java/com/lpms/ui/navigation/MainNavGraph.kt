@@ -31,6 +31,7 @@ import com.lpms.R
 import com.lpms.data.model.AuthUser
 import com.lpms.ui.screens.audit.AuditScreen
 import com.lpms.ui.screens.customers.CustomerDetailScreen
+import com.lpms.ui.screens.customers.CustomerEditScreen
 import com.lpms.ui.screens.customers.CustomerListScreen
 import com.lpms.ui.screens.drugs.DrugEditScreen
 import com.lpms.ui.screens.drugs.DrugListScreen
@@ -132,13 +133,20 @@ fun MainNavGraph(
                 route = Routes.CustomerDetail,
                 arguments = listOf(navArgument(Routes.ArgCustomerId) {
                     type = androidx.navigation.NavType.StringType
+                    defaultValue = Routes.NewCustomerId
                 }),
             ) { entry ->
-                CustomerDetailScreen(
-                    customerId = entry.arguments?.getString(Routes.ArgCustomerId) ?: "",
-                    onNavigate = navigate,
-                    onBack = back,
-                )
+                val customerId = entry.arguments?.getString(Routes.ArgCustomerId)
+                    ?: Routes.NewCustomerId
+                if (customerId == Routes.NewCustomerId) {
+                    CustomerEditScreen(customerId = customerId, onBack = back)
+                } else {
+                    CustomerDetailScreen(
+                        customerId = customerId,
+                        onNavigate = navigate,
+                        onBack = back,
+                    )
+                }
             }
 
             composable(Routes.Inventory) { InventoryScreen(onNavigate = navigate, onBack = back) }
@@ -154,7 +162,6 @@ private fun NavHostController.navigateTo(route: String) {
     navigate(route) {
         launchSingleTop = true
         restoreState = true
-        popUpTo(graph.findStartDestination().id) { saveState = true }
     }
 }
 

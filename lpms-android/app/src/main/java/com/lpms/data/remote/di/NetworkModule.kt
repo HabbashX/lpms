@@ -71,6 +71,7 @@ object NetworkModule {
         // against it, and every endpoint in LpmsApi is written as one.
         .baseUrl("${BuildConfig.BASE_URL}${BuildConfig.API_PREFIX}/")
         .client(client)
+
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 

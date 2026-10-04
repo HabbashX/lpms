@@ -18,6 +18,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +37,8 @@ import com.lpms.data.repository.RefundLine
 import com.lpms.data.remote.dto.SaleStatus
 import com.lpms.ui.components.LpmsCard
 import com.lpms.ui.components.LpmsDetailRow
+import com.lpms.ui.components.LpmsEmptyState
+import com.lpms.ui.components.LpmsLoading
 import com.lpms.ui.components.LpmsPrimaryButton
 import com.lpms.ui.components.LpmsTopBar
 import com.lpms.ui.components.money
@@ -56,101 +60,115 @@ fun SaleDetailScreen(
 ) {
     val sale by viewModel.sale.collectAsStateWithLifecycle()
     val items by viewModel.items.collectAsStateWithLifecycle()
+    val error by remember { derivedStateOf { viewModel.error } }
 
     var showRefundDialog by remember { mutableStateOf(false) }
+
+    // The sale is read from Room, so this has to be requested explicitly — without it
+    // `sale` stays null and the screen never gets past its loading state.
+    LaunchedEffect(saleId) { viewModel.load(saleId) }
 
     Scaffold(
         topBar = {
             LpmsTopBar(
-                title = stringResource(R.string.sale_detail, saleId),
+                title = sale?.let { shortDate(it.createdAt) }
+                    ?: stringResource(R.string.sales_title),
                 onBack = onBack,
             )
         },
     ) { padding ->
-        if (sale == null) {
-            com.lpms.ui.components.LpmsLoading(modifier = Modifier.padding(padding))
-            return@Scaffold
-        }
-
-        val currentSale = sale!!
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            LpmsCard {
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_customer),
-                    value = currentSale.customerName ?: stringResource(R.string.sale_cash_customer),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_created_at),
-                    value = shortDate(currentSale.createdAt),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_payment_method),
-                    value = currentSale.paymentMethod,
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_created_by),
-                    value = currentSale.createdBy ?: "—",
-                )
-                if (currentSale.status == SaleStatus.PARTIALLY_REFUNDED.name ||
-                    currentSale.status == SaleStatus.REFUNDED.name
-                ) {
-                    LpmsDetailRow(
-                        label = stringResource(R.string.sale_refunded_total),
-                        value = money(currentSale.refundedTotal),
-                    )
-                }
-            }
-
-            Text(
-                text = stringResource(R.string.sale_items),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        val notFound = error != null && sale == null
+        when {
+            notFound -> LpmsEmptyState(
+                title = stringResource(R.string.sale_not_found),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             )
 
-            items.forEach { item ->
-                SaleItemCard(item = item)
-            }
+            sale == null -> LpmsLoading(modifier = Modifier.padding(padding))
+            else -> {
+                val currentSale = sale!!
 
-            HorizontalDivider()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    LpmsCard {
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_customer),
+                            value = currentSale.customerName ?: stringResource(R.string.sale_cash_customer),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_created_at),
+                            value = shortDate(currentSale.createdAt),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_payment_method),
+                            value = currentSale.paymentMethod,
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_created_by),
+                            value = currentSale.createdBy ?: "—",
+                        )
+                        if (currentSale.status == SaleStatus.PARTIALLY_REFUNDED.name ||
+                            currentSale.status == SaleStatus.REFUNDED.name
+                        ) {
+                            LpmsDetailRow(
+                                label = stringResource(R.string.sale_refunded_total),
+                                value = money(currentSale.refundedTotal),
+                            )
+                        }
+                    }
 
-            LpmsCard {
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_subtotal),
-                    value = money(currentSale.subtotal),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_discount),
-                    value = money(currentSale.discount),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_total),
-                    value = money(currentSale.total),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_paid),
-                    value = money(currentSale.amountPaid),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.sale_due),
-                    value = money(currentSale.amountDue),
-                )
-            }
+                    Text(
+                        text = stringResource(R.string.sale_items),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
 
-            if (currentSale.serverId != null &&
-                currentSale.status != SaleStatus.REFUNDED.name
-            ) {
-                LpmsPrimaryButton(
-                    text = stringResource(R.string.sale_refund),
-                    onClick = { showRefundDialog = true },
-                )
+                    items.forEach { item ->
+                        SaleItemCard(item = item)
+                    }
+
+                    HorizontalDivider()
+
+                    LpmsCard {
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_subtotal),
+                            value = money(currentSale.subtotal),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_discount),
+                            value = money(currentSale.discount),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_total),
+                            value = money(currentSale.total),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_paid),
+                            value = money(currentSale.amountPaid),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.sale_due),
+                            value = money(currentSale.amountDue),
+                        )
+                    }
+
+                    if (currentSale.serverId != null &&
+                        currentSale.status != SaleStatus.REFUNDED.name
+                    ) {
+                        LpmsPrimaryButton(
+                            text = stringResource(R.string.sale_refund),
+                            onClick = { showRefundDialog = true },
+                        )
+                    }
+                }
             }
         }
     }
@@ -168,7 +186,7 @@ fun SaleDetailScreen(
 }
 
 @Composable
-private fun SaleItemCard(item: SaleItemEntity) {
+fun SaleItemCard(item: SaleItemEntity) {
     LpmsCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -195,7 +213,7 @@ private fun SaleItemCard(item: SaleItemEntity) {
 }
 
 @Composable
-private fun RefundDialog(
+fun RefundDialog(
     items: List<SaleItemEntity>,
     onDismiss: () -> Unit,
     onConfirm: (List<RefundLine>, String?) -> Unit,

@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,6 +32,7 @@ import com.lpms.data.remote.dto.ProfitReportResponse
 import com.lpms.ui.components.LpmsCard
 import com.lpms.ui.components.LpmsDetailRow
 import com.lpms.ui.components.LpmsEmptyState
+import com.lpms.ui.components.LpmsLoading
 import com.lpms.ui.components.LpmsPrimaryButton
 import com.lpms.ui.components.LpmsTopBar
 import com.lpms.ui.components.money
@@ -49,6 +51,11 @@ fun ReportsScreen(
 ) {
     val report by viewModel.report.collectAsStateWithLifecycle()
     val details by viewModel.details.collectAsStateWithLifecycle()
+    val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+
+    var from by remember { mutableStateOf("") }
+    var to by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = { LpmsTopBar(title = stringResource(R.string.reports_title), onBack = onBack) },
@@ -56,53 +63,75 @@ fun ReportsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
+                .padding(padding),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            RangeSelector(viewModel = viewModel)
-
-            if (report == null) {
-                com.lpms.ui.components.LpmsLoading()
-                return@Column
-            }
-
-            val current = report!!
-
-            LpmsCard {
-                LpmsDetailRow(
-                    label = stringResource(R.string.report_revenue),
-                    value = money(current.revenue),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.report_cost),
-                    value = money(current.cost),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.report_profit),
-                    value = money(current.profit),
-                )
-                LpmsDetailRow(
-                    label = stringResource(R.string.report_sales_count),
-                    value = current.salesCount.toString(),
-                )
-            }
-
-            Text(
-                text = stringResource(R.string.report_details),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            RangeSelector(
+                viewModel = viewModel,
+                from = from,
+                to = to,
+                onFromChange = { from = it },
+                onToChange = { to = it },
             )
 
-            if (details.isEmpty()) {
-                LpmsEmptyState(title = stringResource(R.string.report_details_empty))
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(details, key = { it.saleId }) { line ->
-                        DetailRow(line = line)
+            when {
+                loading -> {
+                    LpmsLoading(modifier = Modifier.fillMaxSize().padding(padding))
+                }
+                error != null -> {
+                    LpmsEmptyState(
+                        title = error!!,
+                        modifier = Modifier.fillMaxSize().padding(padding),
+                    )
+                }
+                report == null -> {
+                    LpmsEmptyState(
+                        title = stringResource(R.string.report_details_empty),
+                        modifier = Modifier.fillMaxSize().padding(padding),
+                    )
+                }
+                else -> {
+                    val current = report!!
+
+                    LpmsCard {
+                        LpmsDetailRow(
+                            label = stringResource(R.string.report_revenue),
+                            value = money(current.revenue),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.report_cost),
+                            value = money(current.cost),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.report_profit),
+                            value = money(current.profit),
+                        )
+                        LpmsDetailRow(
+                            label = stringResource(R.string.report_sales_count),
+                            value = current.salesCount.toString(),
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.report_details),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (details.isEmpty()) {
+                        LpmsEmptyState(
+                            title = stringResource(R.string.report_details_empty),
+                            modifier = Modifier.fillMaxSize().padding(padding),
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(details, key = { it.saleId }) { line ->
+                                DetailRow(line = line)
+                            }
+                        }
                     }
                 }
             }
@@ -111,27 +140,32 @@ fun ReportsScreen(
 }
 
 @Composable
-private fun RangeSelector(viewModel: ReportsViewModel) {
-    var from by remember { mutableStateOf("") }
-    var to by remember { mutableStateOf("") }
-
+private fun RangeSelector(
+    viewModel: ReportsViewModel,
+    from: String,
+    to: String,
+    onFromChange: (String) -> Unit,
+    onToChange: (String) -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         OutlinedTextField(
             value = from,
-            onValueChange = { from = it },
+            onValueChange = onFromChange,
             modifier = Modifier.weight(1f),
             label = { Text(stringResource(R.string.report_from)) },
             singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Date),
         )
         OutlinedTextField(
             value = to,
-            onValueChange = { to = it },
+            onValueChange = onToChange,
             modifier = Modifier.weight(1f),
             label = { Text(stringResource(R.string.report_to)) },
             singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Date),
         )
     }
 
@@ -156,7 +190,7 @@ private fun DetailRow(line: ProfitDetailResponse) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
+            Column(horizontalAlignment = Alignment.End) {
                 Text(text = money(line.revenue), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     text = money(line.profit),

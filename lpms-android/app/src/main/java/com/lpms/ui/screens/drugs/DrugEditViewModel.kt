@@ -56,6 +56,9 @@ class DrugEditViewModel @Inject constructor(
     var fieldErrors by mutableStateOf<Map<String, String>>(emptyMap())
         private set
 
+    var deleting by mutableStateOf(false)
+        private set
+
     private var localId: String? = null
     private var loaded = false
 
@@ -154,6 +157,26 @@ class DrugEditViewModel @Inject constructor(
                     } else {
                         emptyMap()
                     }
+                }
+            }
+        }
+    }
+
+    fun delete(onConfirm: () -> Unit) {
+        if (deleting || localId == null) return
+
+        deleting = true
+        error = null
+
+        viewModelScope.launch {
+            when (val result = drugRepository.delete(localId!!)) {
+                is ApiResult.Success -> {
+                    deleting = false
+                    onConfirm()
+                }
+                is ApiResult.Failure -> {
+                    deleting = false
+                    error = result.error
                 }
             }
         }

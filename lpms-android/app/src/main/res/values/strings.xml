@@ -135,6 +135,9 @@
     <string name="drug_active">Active (sellable)</string>
     <string name="drug_saved">Drug saved</string>
     <string name="drug_deleted">Drug deleted</string>
+    <string name="drug_delete">Delete</string>
+    <string name="drug_delete_confirm">Delete this drug?</string>
+    <string name="drug_delete_warning">This will remove the drug from the catalog. If it has been synced to the server, it will be soft-deleted there as well. Drugs with pending sales cannot be deleted.</string>
     <string name="chip_low_stock">Low stock</string>
     <string name="chip_inactive">Inactive</string>
     <string name="chip_out_of_stock">Out of stock</string>
@@ -163,6 +166,7 @@
     <string name="sales_empty">No sales in this period</string>
     <string name="sales_total">Total</string>
     <string name="sale_detail">Sale #%1$s</string>
+    <string name="sale_not_found">Sale not found</string>
     <string name="sale_items">Items</string>
     <string name="sale_subtotal">Subtotal</string>
     <string name="sale_discount">Discount</string>
@@ -233,6 +237,7 @@
     <string name="customer_saved">Customer saved</string>
     <string name="customer_deleted">Customer deleted</string>
     <string name="customer_account">Account</string>
+    <string name="customer_not_found">Customer not found</string>
     <string name="customer_total_purchases">Total purchases</string>
     <string name="customer_total_paid">Total paid</string>
     <string name="customer_total_refunds">Total refunds</string>

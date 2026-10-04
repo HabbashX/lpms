@@ -37,6 +37,7 @@ import com.lpms.ui.components.LpmsEmptyState
 import com.lpms.ui.components.LpmsStatusChip
 import com.lpms.ui.components.LpmsTopBar
 import com.lpms.ui.components.money
+import com.lpms.ui.navigation.Routes
 
 /**
  * The customer list — everyone the pharmacy has sold to or recorded a debt for.
@@ -54,7 +55,7 @@ fun CustomerListScreen(
     Scaffold(
         topBar = { LpmsTopBar(title = stringResource(R.string.customers_title)) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { onNavigate("customer/new") }) {
+            FloatingActionButton(onClick = { onNavigate(Routes.newCustomer()) }) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.customer_new))
             }
         },
@@ -101,7 +102,7 @@ fun CustomerListScreen(
                     items(filtered, key = { it.localId }) { customer ->
                         CustomerCard(
                             customer = customer,
-                            onClick = { onNavigate("customer/${customer.localId}") },
+                            onClick = { onNavigate(Routes.customerDetail(customer.localId)) },
                         )
                     }
                 }

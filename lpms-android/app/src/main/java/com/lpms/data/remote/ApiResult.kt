@@ -45,6 +45,14 @@ sealed interface ApiError {
     data class Unknown(val detail: String?) : ApiError
 }
 
+val ApiError.userMessage: String
+    get() = when (this) {
+        is ApiError.Http -> message ?: "Server error (status $status)"
+        is ApiError.Network -> "No internet connection"
+        is ApiError.Serialization -> "Invalid server response"
+        is ApiError.Unknown -> detail ?: "Unknown error"
+    }
+
 /**
  * Runs an API call and converts every failure mode into an [ApiError]
  * instead of letting exceptions escape into the UI layer.

@@ -3,8 +3,10 @@ package com.lpms.ui.screens.inventory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lpms.data.remote.ApiExecutor
+import com.lpms.data.remote.ApiError
 import com.lpms.data.remote.ApiResult
 import com.lpms.data.remote.LpmsApi
+import com.lpms.data.remote.userMessage
 import com.lpms.data.remote.dto.DrugValuationResponse
 import com.lpms.data.remote.dto.ExpiringBatchResponse
 import com.lpms.data.remote.dto.LowStockDrugResponse
@@ -41,34 +43,80 @@ class InventoryViewModel @Inject constructor(
     private val _valuation = MutableStateFlow<List<DrugValuationResponse>>(emptyList())
     val valuation: StateFlow<List<DrugValuationResponse>> = _valuation.asStateFlow()
 
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     init {
         refresh()
     }
 
     fun refresh() {
+        _loading.value = true
+        _error.value = null
+
         viewModelScope.launch {
-            when (val result = executor.run { api.listBatches() }) {
-                is ApiResult.Success -> _batches.value = result.value.content
-                is ApiResult.Failure -> { /* keep last good data */ }
+            var anySuccess = false
+            var firstError: String? = null
+
+            // Batches
+            try {
+                when (val result = executor.run { api.listBatches() }) {
+                    is ApiResult.Success -> {
+                        _batches.value = result.value.content
+                        anySuccess = true
+                    }
+                    is ApiResult.Failure -> firstError = firstError ?: result.error.userMessage
+                }
+            } catch (e: Exception) {
+                firstError = firstError ?: e.message ?: "Unknown error"
             }
-        }
-        viewModelScope.launch {
-            when (val result = executor.run { api.lowStock() }) {
-                is ApiResult.Success -> _lowStock.value = result.value.content
-                is ApiResult.Failure -> { /* keep last good data */ }
+
+            // Low Stock
+            try {
+                when (val result = executor.run { api.lowStock() }) {
+                    is ApiResult.Success -> {
+                        _lowStock.value = result.value.content
+                        anySuccess = true
+                    }
+                    is ApiResult.Failure -> firstError = firstError ?: result.error.userMessage
+                }
+            } catch (e: Exception) {
+                firstError = firstError ?: e.message ?: "Unknown error"
             }
-        }
-        viewModelScope.launch {
-            when (val result = executor.run { api.expiring() }) {
-                is ApiResult.Success -> _expiring.value = result.value.content
-                is ApiResult.Failure -> { /* keep last good data */ }
+
+            // Expiring
+            try {
+                when (val result = executor.run { api.expiring() }) {
+                    is ApiResult.Success -> {
+                        _expiring.value = result.value.content
+                        anySuccess = true
+                    }
+                    is ApiResult.Failure -> firstError = firstError ?: result.error.userMessage
+                }
+            } catch (e: Exception) {
+                firstError = firstError ?: e.message ?: "Unknown error"
             }
-        }
-        viewModelScope.launch {
-            when (val result = executor.run { api.valuation() }) {
-                is ApiResult.Success -> _valuation.value = result.value.content
-                is ApiResult.Failure -> { /* keep last good data */ }
+
+            // Valuation
+            try {
+                when (val result = executor.run { api.valuation() }) {
+                    is ApiResult.Success -> {
+                        _valuation.value = result.value.content
+                        anySuccess = true
+                    }
+                    is ApiResult.Failure -> firstError = firstError ?: result.error.userMessage
+                }
+            } catch (e: Exception) {
+                firstError = firstError ?: e.message ?: "Unknown error"
             }
+
+            if (!anySuccess && firstError != null) {
+                _error.value = firstError
+            }
+            _loading.value = false
         }
     }
 }

@@ -32,6 +32,7 @@ object Routes {
     const val Customers = "customers"
     const val CustomerDetail = "customer/{customerId}"
     const val ArgCustomerId = "customerId"
+    const val NewCustomerId = "new"
 
     // ── Operations ──────────────────────────────────────────────────────────
     const val Inventory = "inventory"
@@ -42,7 +43,8 @@ object Routes {
     const val Audit = "audit"
     const val Settings = "settings"
 
-    fun saleDetail(saleId: Long) = "sale/$saleId"
+    fun saleDetail(saleLocalId: String) = "sale/$saleLocalId"
     fun drugEdit(drugId: Long) = "drug?drugId=$drugId"
-    fun customerDetail(customerId: Long) = "customer/$customerId"
+    fun newCustomer() = "customer/$NewCustomerId"
+    fun customerDetail(customerId: String) = "customer/$customerId"
 }

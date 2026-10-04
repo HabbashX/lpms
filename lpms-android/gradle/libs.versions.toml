@@ -68,6 +68,9 @@ androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", 
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
+
 [bundles]
 compose = [
     "compose-ui",
@@ -75,6 +78,8 @@ compose = [
     "compose-ui-tooling-preview",
     "compose-material3",
     "compose-material-icons",
+    "compose-foundation",
+    "compose-foundation-layout",
 ]
 
 [plugins]

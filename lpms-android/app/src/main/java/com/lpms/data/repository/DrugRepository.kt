@@ -2,6 +2,7 @@ package com.lpms.data.repository
 
 import com.lpms.data.local.DrugDao
 import com.lpms.data.local.DrugEntity
+import com.lpms.data.local.SaleDao
 import com.lpms.data.local.SyncOperation
 import com.lpms.data.local.toCreateRequest
 import com.lpms.data.local.toEntity
@@ -16,6 +17,7 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -52,6 +54,7 @@ data class DrugDraft(
 @Singleton
 class DrugRepository @Inject constructor(
     private val drugDao: DrugDao,
+    private val saleDao: SaleDao,
     private val api: LpmsApi,
     private val sync: SyncEngine,
     private val executor: ApiExecutor,
@@ -148,17 +151,34 @@ class DrugRepository @Inject constructor(
         return ApiResult.Success(id)
     }
 
-    /**
-     * Deletes a drug. A drug the server has never seen is simply removed; one
-     * it knows about is hidden locally and deleted on the next drain, so the row
-     * disappears from every screen straight away.
-     */
+/**
+ * Deletes a drug.
+ *
+ * - If the drug is referenced by unsynced sales, deletion is blocked.
+ * - If the server has never seen it, it is simply removed.
+ * - If the server knows it, it is hidden locally and deleted on the next drain.
+ */
     suspend fun delete(localId: String): ApiResult<Unit> {
         val drug = drugDao.byLocalId(localId) ?: return ApiResult.Success(Unit)
+
+        // Block if there are unsynced sales referencing this drug
+        val pendingSales = saleDao.observePending().first()
+        val unsyncedSale = pendingSales.firstOrNull { sale ->
+            saleDao.items(sale.localId).any { it.drugLocalId == localId }
+        }
+        if (unsyncedSale != null) {
+            return validation("drug_has_pending_sales")
+        }
+
+        // Note: pending outbox entries for this drug (CREATE_DRUG, CREATE_PURCHASE, etc.)
+        // will be cleaned up automatically when they reach the head of the queue and
+        // fail with "drug not found" - they will be marked as blocked.
+
         if (drug.serverId == null) {
             drugDao.delete(drug)
             return ApiResult.Success(Unit)
         }
+
         drugDao.upsert(
             drug.copy(deleted = true, needsSync = true, updatedAt = System.currentTimeMillis()),
         )

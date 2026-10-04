@@ -135,6 +135,9 @@
     <string name="drug_active">مفعّل (قابل للبيع)</string>
     <string name="drug_saved">تم حفظ الدواء</string>
     <string name="drug_deleted">تم حذف الدواء</string>
+    <string name="drug_delete">حذف</string>
+    <string name="drug_delete_confirm">حذف هذا الدواء؟</string>
+    <string name="drug_delete_warning">سيتم إزالة الدواء من القائمة. إذا كان قد تم مزامنته مع الخادم، فسيتم حذفه هناك أيضًا. لا يمكن حذف الأدوية التي لديها مبيعات معلقة.</string>
     <string name="chip_low_stock">مخزون منخفض</string>
     <string name="chip_inactive">غير مفعّل</string>
     <string name="chip_out_of_stock">نفد المخزون</string>
@@ -163,6 +166,7 @@
     <string name="sales_empty">لا توجد مبيعات في هذه الفترة</string>
     <string name="sales_total">الإجمالي</string>
     <string name="sale_detail">فاتورة #%1$s</string>
+    <string name="sale_not_found">الفاتورة غير موجودة</string>
     <string name="sale_items">البنود</string>
     <string name="sale_subtotal">المجموع الفرعي</string>
     <string name="sale_discount">الخصم</string>

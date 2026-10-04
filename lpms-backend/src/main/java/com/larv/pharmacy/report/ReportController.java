@@ -21,8 +21,8 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/reports")
-@Tag(name = "Reports", description = "Profit reporting (ADMIN only)")
-@PreAuthorize("hasRole('ADMIN')")
+@Tag(name = "Reports", description = "Profit reporting (ADMIN, PHARMACIST)")
+@PreAuthorize("hasAnyRole('ADMIN', 'PHARMACIST')")
 public class ReportController {
 
     private final ProfitReportService profitReportService;

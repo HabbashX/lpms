@@ -40,6 +40,7 @@ class SecurityIntegrationTest {
 
     private static final String ADMIN_PASSWORD = "Lpms#Test2026";
     private static final String EMPLOYEE_PASSWORD = "Employee#Test2026";
+    private static final String PHARMACIST_PASSWORD = "Pharmacist#Test2026";
 
     @BeforeAll
     static void requireDatabase() {
@@ -55,6 +56,7 @@ class SecurityIntegrationTest {
     void seedUsers() {
         upsert("it.admin", ADMIN_PASSWORD, Role.ADMIN, false);
         upsert("it.emp", EMPLOYEE_PASSWORD, Role.EMPLOYEE, false);
+        upsert("it.pharm", PHARMACIST_PASSWORD, Role.PHARMACIST, false);
         upsert("it.force", "Temp#Pass2026", Role.PHARMACIST, true);
         upsert("it.lock", "Lock#Pass2026", Role.EMPLOYEE, false);
     }
@@ -134,6 +136,31 @@ class SecurityIntegrationTest {
                                 + "\",\"category\":\"IT-Sec\",\"dosageForm\":\"TABLET\","
                                 + "\"minimumStockLevel\":0}"))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void pharmacistCanReadReportsButNotAdminOnlyEndpoints() throws Exception {
+        String token = login("it.pharm", PHARMACIST_PASSWORD);
+
+        // reports are available to pharmacists
+        for (String report : new String[] {
+                "/api/v1/reports/profit/daily",
+                "/api/v1/reports/profit/weekly",
+                "/api/v1/reports/profit/monthly",
+                "/api/v1/reports/profit?preset=last30days",
+                "/api/v1/reports/profit/details?page=0&size=5" }) {
+            mvc.perform(get(report).header("Authorization", bearer(token)))
+                    .andExpect(status().isOk());
+        }
+
+        // everything that manages the system stays admin-only
+        mvc.perform(get("/api/v1/users").header("Authorization", bearer(token)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        mvc.perform(get("/api/v1/settings").header("Authorization", bearer(token)))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/audit").header("Authorization", bearer(token)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

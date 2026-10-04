@@ -85,7 +85,7 @@ public class SecurityConfig {
                         // administrator only
                         .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/audit/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/reports/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/reports/**").hasAnyRole("ADMIN", "PHARMACIST")
                         .requestMatchers("/api/v1/settings/**").hasRole("ADMIN")
                         // catalog writes and stock purchases
                         .requestMatchers(HttpMethod.POST, "/api/v1/drugs").hasAnyRole("ADMIN", "PHARMACIST")

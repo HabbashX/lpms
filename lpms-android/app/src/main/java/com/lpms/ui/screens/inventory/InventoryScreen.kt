@@ -32,6 +32,7 @@ import com.lpms.R
 import com.lpms.data.remote.dto.StockBatchResponse
 import com.lpms.ui.components.LpmsCard
 import com.lpms.ui.components.LpmsEmptyState
+import com.lpms.ui.components.LpmsLoading
 import com.lpms.ui.components.LpmsTopBar
 import com.lpms.ui.components.money
 
@@ -57,6 +58,9 @@ fun InventoryScreen(
         stringResource(R.string.inventory_tab_valuation),
     )
 
+    val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = { LpmsTopBar(title = stringResource(R.string.inventory_title), onBack = onBack) },
     ) { padding ->
@@ -75,11 +79,24 @@ fun InventoryScreen(
                 }
             }
 
-            when (selectedTab) {
-                0 -> BatchesTab(viewModel = viewModel)
-                1 -> LowStockTab(viewModel = viewModel)
-                2 -> ExpiringTab(viewModel = viewModel)
-                3 -> ValuationTab(viewModel = viewModel)
+            when {
+                loading -> {
+                    LpmsLoading(modifier = Modifier.fillMaxSize())
+                }
+                error != null -> {
+                    LpmsEmptyState(
+                        title = error!!,
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                    )
+                }
+                else -> {
+                    when (selectedTab) {
+                        0 -> BatchesTab(viewModel = viewModel)
+                        1 -> LowStockTab(viewModel = viewModel)
+                        2 -> ExpiringTab(viewModel = viewModel)
+                        3 -> ValuationTab(viewModel = viewModel)
+                    }
+                }
             }
         }
     }
@@ -92,7 +109,7 @@ private fun BatchesTab(viewModel: InventoryViewModel) {
     if (batches.isEmpty()) {
         LpmsEmptyState(
             title = stringResource(R.string.inventory_batches_empty),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
         )
         return
     }
@@ -151,7 +168,7 @@ private fun LowStockTab(viewModel: InventoryViewModel) {
     if (drugs.isEmpty()) {
         LpmsEmptyState(
             title = stringResource(R.string.inventory_low_stock_empty),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
         )
         return
     }
@@ -190,7 +207,7 @@ private fun ExpiringTab(viewModel: InventoryViewModel) {
     if (batches.isEmpty()) {
         LpmsEmptyState(
             title = stringResource(R.string.inventory_expiring_empty),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
         )
         return
     }
@@ -237,7 +254,7 @@ private fun ValuationTab(viewModel: InventoryViewModel) {
     if (items.isEmpty()) {
         LpmsEmptyState(
             title = stringResource(R.string.inventory_valuation_empty),
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
         )
         return
     }

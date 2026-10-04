@@ -31,6 +31,7 @@ import com.lpms.ui.components.LpmsStatusChip
 import com.lpms.ui.components.LpmsTopBar
 import com.lpms.ui.components.money
 import com.lpms.ui.components.shortDate
+import com.lpms.ui.navigation.Routes
 
 /**
  * Sale history.
@@ -70,7 +71,7 @@ fun SalesScreen(
                 items(sales, key = { it.localId }) { sale ->
                     SaleCard(
                         sale = sale,
-                        onClick = { onNavigate("sale/${sale.localId}") },
+                        onClick = { onNavigate(Routes.saleDetail(sale.localId)) },
                     )
                 }
             }
