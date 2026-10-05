@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/dashboardFragment"
+        android:icon="@drawable/ic_nav_dashboard"
+        android:title="@string/nav_dashboard" />
+    <item
+        android:id="@+id/moreFragment"
+        android:icon="@drawable/ic_nav_more"
+        android:title="@string/nav_more" />
+</menu>
