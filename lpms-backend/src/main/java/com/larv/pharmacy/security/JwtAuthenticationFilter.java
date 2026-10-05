@@ -51,6 +51,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // The client may still send its expired access token when refreshing.
+        return request.getRequestURI().endsWith("/api/v1/auth/refresh");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");

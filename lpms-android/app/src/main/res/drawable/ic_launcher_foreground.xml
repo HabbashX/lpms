@@ -1,42 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-        android:width="108dp"
-        android:height="108dp"
-        android:viewportWidth="108"
-        android:viewportHeight="108">
-    <!--
-      Artwork is authored in the source SVG's 200x200 space and mapped into the
-      adaptive-icon safe zone: 200*0.375 + 16.5 => content spans 24dp..84dp.
-    -->
-    <group
-            android:scaleX="0.375"
-            android:scaleY="0.375"
-            android:translateX="16.5"
-            android:translateY="16.5">
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:scaleX="0.5" android:scaleY="0.5" android:translateX="27" android:translateY="27">
         <path
-                android:pathData="M100,46h20a6,6 0 0 1 6,6v22h22a6,6 0 0 1 6,6v20a6,6 0 0 1 -6,6h-22v22a6,6 0 0 1 -6,6h-20a6,6 0 0 1 -6,-6v-22h-22a6,6 0 0 1 -6,-6v-20a6,6 0 0 1 6,-6h22v-22a6,6 0 0 1 6,-6z"
-                android:fillColor="#FFFFFF"
-                android:fillAlpha="0.18" />
-        <group
-                android:pivotX="100"
-                android:pivotY="100"
-                android:rotation="-40">
-            <path
-                    android:pathData="M76,76h48a24,24 0 0 1 0,48h-48a24,24 0 0 1 0,-48z"
-                    android:fillColor="#FFFFFF" />
-            <path
-                    android:pathData="M100,76h24a24,24 0 0 1 0,48h-24z"
-                    android:fillColor="#99F6E4" />
-            <path
-                    android:pathData="M76,76h48a24,24 0 0 1 0,48h-48a24,24 0 0 1 0,-48z"
-                    android:strokeColor="#0F766E"
-                    android:strokeWidth="3"
-                    android:fillColor="#00000000" />
-            <path
-                    android:pathData="M100,76L100,124"
-                    android:strokeColor="#0F766E"
-                    android:strokeWidth="3"
-                    android:strokeLineCap="round" />
-        </group>
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,20 L60,42 L82,42 L64,55 L71,78 L54,64 L37,78 L44,55 L26,42 L48,42 Z" />
     </group>
 </vector>

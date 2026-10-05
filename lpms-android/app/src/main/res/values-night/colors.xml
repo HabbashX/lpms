@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lpms_primary">#FF80D4D9</color>
+    <color name="lpms_on_primary">#FF003739</color>
+    <color name="lpms_primary_container">#FF004F52</color>
+    <color name="lpms_on_primary_container">#FF9CF1F5</color>
+    <color name="lpms_secondary">#FFB1CBCC</color>
+    <color name="lpms_on_secondary">#FF1B3436</color>
+    <color name="lpms_surface">#FF191C1C</color>
+    <color name="lpms_on_surface">#FFE0E3E3</color>
+    <color name="lpms_error">#FFFFB4AB</color>
+    <color name="lpms_on_error">#FF690005</color>
+
+    <color name="stock_ok">#FF7BD98A</color>
+    <color name="stock_low">#FFFFB74D</color>
+    <color name="stock_critical">#FFFF8A80</color>
+</resources>

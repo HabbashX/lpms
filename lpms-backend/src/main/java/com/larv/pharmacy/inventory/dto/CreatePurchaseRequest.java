@@ -20,5 +20,11 @@ public record CreatePurchaseRequest(
 
         @Size(max = 150) String supplier,
         @Size(max = 100) String batchNumber,
-        LocalDate expirationDate) {
+        LocalDate expirationDate,
+        /** Optional: set the drug's default selling price. */
+        @Positive(message = "sellingPrice must be positive")
+        java.math.BigDecimal sellingPrice,
+        /** Optional: set selling price = weighted-average cost (after this purchase) + this profit. */
+        @jakarta.validation.constraints.PositiveOrZero(message = "profitPerUnit must not be negative")
+        java.math.BigDecimal profitPerUnit) {
 }

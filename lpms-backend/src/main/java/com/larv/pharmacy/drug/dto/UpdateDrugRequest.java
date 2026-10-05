@@ -12,9 +12,12 @@ public record UpdateDrugRequest(
         @Size(max = 50) String barcode,
         @Size(max = 150) String manufacturer,
         @Size(max = 100) String category,
+        Long categoryId,
         DosageForm dosageForm,
         @Size(max = 50) String strength,
         @Size(max = 30) String unit,
+        @jakarta.validation.constraints.Positive(message = "sellingPrice must be positive")
+        java.math.BigDecimal sellingPrice,
         @Size(max = 500) String description,
         @PositiveOrZero(message = "minimumStockLevel must not be negative")
         Integer minimumStockLevel,

@@ -1,26 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Lpmsandroid" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#FF14B8A6</item>
-        <item name="colorOnPrimary">#FF042F2E</item>
-        <item name="colorPrimaryContainer">#FF0F766E</item>
-        <item name="colorOnPrimaryContainer">#FFCCFBF1</item>
-
-        <item name="colorSurface">@color/lpms_surface_dark</item>
-        <item name="colorOnSurface">#FFF5F5F4</item>
-        <item name="colorSurfaceVariant">#FF292524</item>
-        <item name="colorOnSurfaceVariant">#FFA8A29E</item>
-        <item name="colorOutline">#FF44403C</item>
-
-        <item name="android:colorBackground">@color/lpms_background_dark</item>
-        <item name="android:windowBackground">@color/lpms_background_dark</item>
-        <item name="android:textColorPrimary">#FFF5F5F4</item>
-        <item name="android:textColorSecondary">#FFA8A29E</item>
-
-        <item name="colorError">#FFF87171</item>
-
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
+    <style name="Theme.LPMS" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/lpms_primary</item>
+        <item name="colorOnPrimary">@color/lpms_on_primary</item>
+        <item name="colorPrimaryContainer">@color/lpms_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/lpms_on_primary_container</item>
+        <item name="colorSecondary">@color/lpms_secondary</item>
+        <item name="colorOnSecondary">@color/lpms_on_secondary</item>
+        <item name="colorSurface">@color/lpms_surface</item>
+        <item name="colorOnSurface">@color/lpms_on_surface</item>
+        <item name="colorError">@color/lpms_error</item>
+        <item name="colorOnError">@color/lpms_on_error</item>
     </style>
 </resources>

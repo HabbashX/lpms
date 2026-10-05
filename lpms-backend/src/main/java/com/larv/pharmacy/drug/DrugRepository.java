@@ -18,6 +18,8 @@ public interface DrugRepository extends JpaRepository<Drug, Long>, JpaSpecificat
 
     boolean existsByBarcodeAndIdNot(String barcode, Long id);
 
+    boolean existsByCategoryId(Long categoryId);
+
     /**
      * Row lock used to serialize all stock mutations (purchase, sale, refund)
      * for one drug; callers must lock drugs in ascending id order.

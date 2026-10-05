@@ -5,11 +5,14 @@ import com.larv.pharmacy.audit.AuditService;
 import com.larv.pharmacy.auth.dto.ChangePasswordRequest;
 import com.larv.pharmacy.auth.dto.LoginRequest;
 import com.larv.pharmacy.auth.dto.LoginResponse;
+import com.larv.pharmacy.auth.dto.RefreshRequest;
 import com.larv.pharmacy.common.exception.AccountDisabledException;
 import com.larv.pharmacy.common.exception.AccountLockedException;
 import com.larv.pharmacy.common.exception.InvalidCredentialsException;
+import com.larv.pharmacy.common.exception.PharmacyException;
 import com.larv.pharmacy.common.exception.InvalidRequestException;
 import com.larv.pharmacy.security.JwtService;
+import com.larv.pharmacy.security.RefreshTokenService;
 import com.larv.pharmacy.security.PasswordPolicy;
 import com.larv.pharmacy.security.TokenRevocationService;
 import com.larv.pharmacy.security.UserPrincipal;
@@ -37,6 +40,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TokenRevocationService tokenRevocationService;
+    private final RefreshTokenService refreshTokenService;
     private final LoginRateLimiter rateLimiter;
     private final AuditService auditService;
     private final Clock clock;
@@ -45,6 +49,7 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        TokenRevocationService tokenRevocationService,
+                       RefreshTokenService refreshTokenService,
                        LoginRateLimiter rateLimiter,
                        AuditService auditService,
                        Clock clock) {
@@ -52,6 +57,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.tokenRevocationService = tokenRevocationService;
+        this.refreshTokenService = refreshTokenService;
         this.rateLimiter = rateLimiter;
         this.auditService = auditService;
         this.clock = clock;
@@ -105,19 +111,33 @@ public class AuthService {
         userRepository.save(user);
         rateLimiter.success(ip, request.username());
 
-        String token = jwtService.generateToken(user);
         auditService.record(user.getId(), AuditAction.LOGIN, "User", user.getId(),
                 "User '" + user.getUsername() + "' logged in", ip);
+        return buildLoginResponse(user);
+    }
 
+    /** Rotates the refresh token and issues a new access token. */
+    @Transactional(noRollbackFor = PharmacyException.class)
+    public LoginResponse refresh(RefreshRequest request) {
+        User user = refreshTokenService.consume(request.refreshToken().trim());
+        return buildLoginResponse(user);
+    }
+
+    private LoginResponse buildLoginResponse(User user) {
+        String token = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.issue(user);
         return new LoginResponse(
                 token,
                 "Bearer",
                 jwtService.expirationSeconds(),
+                refreshToken,
+                refreshTokenService.lifetime().getSeconds(),
                 new LoginResponse.UserSummary(user.getId(), user.getUsername(), user.getRole()));
     }
 
     @Transactional
-    public void logout(String authorizationHeader) {
+    public void logout(String authorizationHeader, String refreshToken) {
+        refreshTokenService.revoke(refreshToken);
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return;
         }
@@ -154,6 +174,7 @@ public class AuthService {
         // Invalidate every token issued before this change.
         user.setTokenNotBefore(clock.instant());
         userRepository.save(user);
+        refreshTokenService.revokeAllForUser(user.getId());
 
         auditService.record(AuditAction.CHANGE_PASSWORD, "User", user.getId(),
                 "User '" + user.getUsername() + "' changed their password");

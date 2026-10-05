@@ -6,6 +6,8 @@ public record LoginResponse(
         String accessToken,
         String tokenType,
         long expiresIn,
+        String refreshToken,
+        long refreshExpiresIn,
         UserSummary user) {
 
     public record UserSummary(Long id, String username, Role role) {

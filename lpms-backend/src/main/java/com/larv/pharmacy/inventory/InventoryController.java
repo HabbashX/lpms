@@ -2,6 +2,7 @@ package com.larv.pharmacy.inventory;
 
 import com.larv.pharmacy.common.dto.PageResponse;
 import com.larv.pharmacy.inventory.dto.CreatePurchaseRequest;
+import com.larv.pharmacy.inventory.dto.DrugPricingResponse;
 import com.larv.pharmacy.inventory.dto.DrugValuationResponse;
 import com.larv.pharmacy.inventory.dto.ExpiringBatchResponse;
 import com.larv.pharmacy.inventory.dto.LowStockDrugResponse;
@@ -74,6 +75,17 @@ public class InventoryController {
                     + "weightedAverageCost = totalInventoryCost / totalQuantity.")
     public DrugValuationResponse valuationForDrug(@PathVariable Long drugId) {
         return inventoryService.valuationForDrug(drugId);
+    }
+
+    @GetMapping("/drugs/{drugId}/pricing")
+    @Operation(summary = "Weighted-average cost, current profit and suggested selling price (ADMIN/PHARMACIST)",
+            description = "Average cost is quantity-weighted over all remaining batches. "
+                    + "Pass profitPerUnit (cost + profit) or marginPercent (profit as % of price) to get "
+                    + "suggestedSellingPrice; passing both is rejected.")
+    public DrugPricingResponse pricing(@PathVariable Long drugId,
+                                       @RequestParam(required = false) java.math.BigDecimal profitPerUnit,
+                                       @RequestParam(required = false) java.math.BigDecimal marginPercent) {
+        return inventoryService.pricing(drugId, profitPerUnit, marginPercent);
     }
 
     @GetMapping("/low-stock")

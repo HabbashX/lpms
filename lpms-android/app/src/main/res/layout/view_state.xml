@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Reusable Loading / Empty / Error block. Screens include it next to their content in a
+  FrameLayout and drive it through StateRenderer. The retry button is hidden for the
+  plain "empty" case, so one layout serves both states.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:visibility="gone"
+    tools:visibility="gone">
+
+    <ProgressBar
+        android:id="@+id/state_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/state_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone"
+        tools:text="Nothing to show yet"
+        tools:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/state_retry"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/action_retry"
+        android:visibility="gone"
+        tools:visibility="gone" />
+</LinearLayout>

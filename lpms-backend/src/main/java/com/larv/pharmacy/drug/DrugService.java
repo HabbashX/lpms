@@ -6,6 +6,7 @@ import com.larv.pharmacy.common.dto.PageResponse;
 import com.larv.pharmacy.common.exception.BusinessRuleException;
 import com.larv.pharmacy.common.exception.DrugNotFoundException;
 import com.larv.pharmacy.common.exception.ResourceNotFoundException;
+import com.larv.pharmacy.common.util.MoneyUtil;
 import com.larv.pharmacy.common.util.PaginationUtil;
 import com.larv.pharmacy.drug.dto.CreateDrugRequest;
 import com.larv.pharmacy.drug.dto.DrugResponse;
@@ -27,7 +28,7 @@ import java.util.Set;
 public class DrugService {
 
     private static final Set<String> SORTABLE = Set.of("id", "name", "genericName", "barcode",
-            "currentQuantity", "createdAt", "updatedAt");
+            "currentQuantity", "sellingPrice", "createdAt", "updatedAt");
 
     private final DrugRepository drugRepository;
     private final CategoryRepository categoryRepository;
@@ -66,8 +67,8 @@ public class DrugService {
     public DrugResponse create(CreateDrugRequest request) {
         Drug drug = new Drug();
         apply(drug, request.name(), request.genericName(), request.barcode(), request.manufacturer(),
-                request.category(), request.dosageForm(), request.strength(), request.unit(),
-                request.description(), request.minimumStockLevel());
+                request.category(), request.categoryId(), request.dosageForm(), request.strength(),
+                request.unit(), request.sellingPrice(), request.description(), request.minimumStockLevel());
         drug.setActive(true);
         drug.setCurrentQuantity(0);
         Drug saved = drugRepository.save(drug);
@@ -81,8 +82,8 @@ public class DrugService {
     public DrugResponse update(Long id, UpdateDrugRequest request) {
         Drug drug = findOrThrow(id);
         apply(drug, request.name(), request.genericName(), request.barcode(), request.manufacturer(),
-                request.category(), request.dosageForm(), request.strength(), request.unit(),
-                request.description(), request.minimumStockLevel());
+                request.category(), request.categoryId(), request.dosageForm(), request.strength(),
+                request.unit(), request.sellingPrice(), request.description(), request.minimumStockLevel());
         if (request.active() != null) {
             drug.setActive(request.active());
         }
@@ -108,8 +109,9 @@ public class DrugService {
     }
 
     private void apply(Drug drug, String name, String genericName, String barcode, String manufacturer,
-                       String categoryName, DosageForm dosageForm, String strength, String unit,
-                       String description, Integer minimumStockLevel) {
+                       String categoryName, Long categoryId, DosageForm dosageForm, String strength,
+                       String unit, java.math.BigDecimal sellingPrice, String description,
+                       Integer minimumStockLevel) {
         drug.setName(name.trim());
         drug.setGenericName(trimToNull(genericName));
         drug.setManufacturer(trimToNull(manufacturer));
@@ -130,7 +132,14 @@ public class DrugService {
             }
         }
         drug.setBarcode(normalizedBarcode);
-        drug.setCategory(resolveCategory(categoryName));
+        drug.setSellingPrice(sellingPrice == null ? null : MoneyUtil.round2(sellingPrice));
+        drug.setCategory(categoryId != null ? findCategoryOrThrow(categoryId) : resolveCategory(categoryName));
+    }
+
+    private Category findCategoryOrThrow(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Category", categoryId));
     }
 
     private Category resolveCategory(String categoryName) {

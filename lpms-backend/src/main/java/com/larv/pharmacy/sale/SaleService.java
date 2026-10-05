@@ -145,11 +145,16 @@ public class SaleService {
             }
 
             CostBasis basis = inventoryService.costBasis(batches);
+            BigDecimal unitPrice = item.unitSellingPrice() != null ? item.unitSellingPrice() : drug.getSellingPrice();
+            if (unitPrice == null) {
+                throw new InvalidSaleException("Drug '" + drug.getName()
+                        + "' has no default selling price; provide unitSellingPrice");
+            }
             BigDecimal lineTotal = MoneyUtil.round2(
-                    MoneyUtil.multiply(item.unitSellingPrice(), quantity));
+                    MoneyUtil.multiply(unitPrice, quantity));
             BigDecimal cost = MoneyUtil.round2(
                     MoneyUtil.multiply(basis.weightedAverageCost(), quantity));
-            lines.add(new PreparedLine(drug, batches, quantity, item.unitSellingPrice(),
+            lines.add(new PreparedLine(drug, batches, quantity, unitPrice,
                     basis.weightedAverageCost(), lineTotal, cost));
         }
 

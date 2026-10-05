@@ -14,6 +14,7 @@ import com.larv.pharmacy.drug.DrugRepository;
 import com.larv.pharmacy.inventory.CostingService.CostBasis;
 import com.larv.pharmacy.inventory.StockBatchRow;
 import com.larv.pharmacy.inventory.dto.CreatePurchaseRequest;
+import com.larv.pharmacy.inventory.dto.DrugPricingResponse;
 import com.larv.pharmacy.inventory.dto.DrugValuationResponse;
 import com.larv.pharmacy.inventory.dto.ExpiringBatchResponse;
 import com.larv.pharmacy.inventory.dto.LowStockDrugResponse;
@@ -104,6 +105,7 @@ public class InventoryService {
         stockBatchRepository.save(batch);
 
         drug.setCurrentQuantity(drug.getCurrentQuantity() + quantity);
+        applyPricing(drug, request.sellingPrice(), request.profitPerUnit());
         drugRepository.save(drug);
 
         auditService.record(AuditAction.PURCHASE_STOCK, "StockBatch", batch.getId(),
@@ -112,6 +114,68 @@ public class InventoryService {
                         + (batch.getBatchNumber() != null ? " (batch " + batch.getBatchNumber() + ")" : ""));
 
         return StockBatchResponse.from(batch, drug.getName());
+    }
+
+    /** Sets the drug's default selling price from an explicit price or from weighted cost + wanted profit. */
+    private void applyPricing(Drug drug, BigDecimal sellingPrice, BigDecimal profitPerUnit) {
+        if (sellingPrice != null && profitPerUnit != null) {
+            throw new InvalidRequestException("INVALID_PRICING",
+                    "Provide either sellingPrice or profitPerUnit, not both");
+        }
+        if (sellingPrice != null) {
+            drug.setSellingPrice(MoneyUtil.round2(sellingPrice));
+        } else if (profitPerUnit != null) {
+            CostBasis basis = costBasis(stockBatchRepository.findRemainingByDrug(drug.getId()));
+            drug.setSellingPrice(PricingCalculator.priceForProfit(basis.weightedAverageCost(), profitPerUnit));
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public DrugPricingResponse pricing(Long drugId, BigDecimal profitPerUnit, BigDecimal marginPercent) {
+        if (profitPerUnit != null && marginPercent != null) {
+            throw new InvalidRequestException("INVALID_PRICING",
+                    "Provide either profitPerUnit or marginPercent, not both");
+        }
+        if (profitPerUnit != null && profitPerUnit.signum() < 0) {
+            throw new InvalidRequestException("INVALID_PRICING", "profitPerUnit must not be negative");
+        }
+        Drug drug = drugRepository.findById(drugId).orElseThrow(() -> new DrugNotFoundException(drugId));
+        List<StockBatch> batches = stockBatchRepository.findRemainingByDrug(drugId);
+        CostBasis basis = costBasis(batches);
+        BigDecimal cost = basis.weightedAverageCost();
+        BigDecimal price = drug.getSellingPrice();
+
+        BigDecimal profit = null;
+        BigDecimal margin = null;
+        BigDecimal markup = null;
+        BigDecimal totalProfit = null;
+        if (price != null && basis.totalQuantity() > 0) {
+            BigDecimal unitProfit = price.subtract(cost);
+            profit = MoneyUtil.round2(unitProfit);
+            margin = PricingCalculator.marginPercent(cost, price);
+            markup = PricingCalculator.markupPercent(cost, price);
+            totalProfit = MoneyUtil.round2(unitProfit.multiply(BigDecimal.valueOf(basis.totalQuantity())));
+        }
+        BigDecimal suggested = null;
+        if (basis.totalQuantity() > 0) {
+            if (profitPerUnit != null) {
+                suggested = PricingCalculator.priceForProfit(cost, profitPerUnit);
+            } else if (marginPercent != null) {
+                suggested = PricingCalculator.priceForMargin(cost, marginPercent);
+            }
+        }
+        List<DrugPricingResponse.BatchCost> batchCosts = batches.stream()
+                .map(b -> new DrugPricingResponse.BatchCost(b.getId(), b.getBatchNumber(),
+                        b.getRemainingQuantity(), MoneyUtil.round2(b.getUnitPurchasePrice()), b.getExpirationDate()))
+                .toList();
+        return new DrugPricingResponse(
+                drug.getId(),
+                drug.getName(),
+                basis.totalQuantity(),
+                MoneyUtil.round2(basis.totalInventoryCost()),
+                MoneyUtil.round2(cost),
+                price == null ? null : MoneyUtil.round2(price),
+                profit, margin, markup, totalProfit, suggested, batchCosts);
     }
 
     // ------------------------------------------------------------------

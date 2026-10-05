@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Declares the languages this app ships so Android 13+ shows an in-app
-  language entry in system settings, and so the system can offer the
-  per-app language preference.
--->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="en" />
     <locale android:name="ar" />

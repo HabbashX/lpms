@@ -77,7 +77,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // public
                         .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**")
@@ -92,6 +92,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/drugs/*").hasAnyRole("ADMIN", "PHARMACIST")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/drugs/*").hasAnyRole("ADMIN", "PHARMACIST")
                         .requestMatchers(HttpMethod.POST, "/api/v1/inventory/purchases")
+                        .hasAnyRole("ADMIN", "PHARMACIST")
+                        // cost/pricing analysis
+                        .requestMatchers(HttpMethod.GET, "/api/v1/inventory/drugs/*/pricing")
+                        .hasAnyRole("ADMIN", "PHARMACIST")
+                        // category management
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categories")
+                        .hasAnyRole("ADMIN", "PHARMACIST")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/*")
+                        .hasAnyRole("ADMIN", "PHARMACIST")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/*")
                         .hasAnyRole("ADMIN", "PHARMACIST")
                         // financial corrections
                         .requestMatchers(HttpMethod.POST, "/api/v1/sales/*/refund")

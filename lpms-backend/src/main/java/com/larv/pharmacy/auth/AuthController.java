@@ -3,6 +3,8 @@ package com.larv.pharmacy.auth;
 import com.larv.pharmacy.auth.dto.ChangePasswordRequest;
 import com.larv.pharmacy.auth.dto.LoginRequest;
 import com.larv.pharmacy.auth.dto.LoginResponse;
+import com.larv.pharmacy.auth.dto.LogoutRequest;
+import com.larv.pharmacy.auth.dto.RefreshRequest;
 import com.larv.pharmacy.security.UserPrincipal;
 import com.larv.pharmacy.user.UserRepository;
 import com.larv.pharmacy.user.dto.UserResponse;
@@ -44,13 +46,24 @@ public class AuthController {
         return authService.login(request);
     }
 
+    @PostMapping("/refresh")
+    @ResponseStatus(HttpStatus.OK)
+    @SecurityRequirements
+    @Operation(summary = "Refresh access token",
+            description = "Exchanges a refresh token for a new access token and a new refresh token (rotation). "
+                    + "The old refresh token becomes invalid; reusing it revokes all of the user's sessions.")
+    public LoginResponse refresh(@Valid @RequestBody RefreshRequest request) {
+        return authService.refresh(request);
+    }
+
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Log out", description = "Revokes the presented access token.")
+    @Operation(summary = "Log out", description = "Revokes the presented access token and, when supplied in the body, the refresh token.")
     public ResponseEntity<Void> logout(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false)
-                                       String authorization) {
-        authService.logout(authorization);
+                                       String authorization,
+                                       @RequestBody(required = false) LogoutRequest request) {
+        authService.logout(authorization, request == null ? null : request.refreshToken());
         return ResponseEntity.noContent().build();
     }
 

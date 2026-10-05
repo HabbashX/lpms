@@ -1,31 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--
-      Host theme only: the app is Compose-driven, so all real colours come
-      from com.lpms.ui.theme.LpmsTheme. This keeps the window background,
-      status/navigation bars and the pre-Compose frame on the right palette.
-    -->
-    <style name="Theme.Lpmsandroid" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.LPMS" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/lpms_primary</item>
         <item name="colorOnPrimary">@color/lpms_on_primary</item>
-        <item name="colorPrimaryContainer">@color/lpms_primary</item>
-        <item name="colorOnPrimaryContainer">@color/lpms_on_primary</item>
-
+        <item name="colorPrimaryContainer">@color/lpms_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/lpms_on_primary_container</item>
+        <item name="colorSecondary">@color/lpms_secondary</item>
+        <item name="colorOnSecondary">@color/lpms_on_secondary</item>
         <item name="colorSurface">@color/lpms_surface</item>
-        <item name="colorOnSurface">@color/lpms_text_primary</item>
-        <item name="colorSurfaceVariant">@color/lpms_muted</item>
-        <item name="colorOnSurfaceVariant">@color/lpms_text_secondary</item>
-        <item name="colorOutline">@color/lpms_outline</item>
+        <item name="colorOnSurface">@color/lpms_on_surface</item>
+        <item name="colorError">@color/lpms_error</item>
+        <item name="colorOnError">@color/lpms_on_error</item>
+    </style>
 
-        <item name="android:colorBackground">@color/lpms_background</item>
-        <item name="android:windowBackground">@color/lpms_background</item>
-        <item name="android:textColorPrimary">@color/lpms_text_primary</item>
-        <item name="android:textColorSecondary">@color/lpms_text_secondary</item>
-
-        <item name="colorError">@color/lpms_danger</item>
-
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
+    <style name="Widget.LPMS.Money" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">monospace</item>
     </style>
 </resources>

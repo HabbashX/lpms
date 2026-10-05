@@ -1,25 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- LPMS design tokens (spec §7) -->
-    <color name="lpms_primary">#FF0F766E</color>
-    <color name="lpms_primary_dark">#FF115E59</color>
+    <color name="lpms_primary">#FF00696D</color>
     <color name="lpms_on_primary">#FFFFFFFF</color>
+    <color name="lpms_primary_container">#FF9CF1F5</color>
+    <color name="lpms_on_primary_container">#FF002022</color>
+    <color name="lpms_secondary">#FF4A6365</color>
+    <color name="lpms_on_secondary">#FFFFFFFF</color>
+    <color name="lpms_surface">#FFFAFDFC</color>
+    <color name="lpms_on_surface">#FF191C1C</color>
+    <color name="lpms_error">#FFBA1A1A</color>
+    <color name="lpms_on_error">#FFFFFFFF</color>
 
-    <color name="lpms_background">#FFFAFAF9</color>
-    <color name="lpms_surface">#FFFFFFFF</color>
-    <color name="lpms_outline">#FFE7E5E4</color>
-    <color name="lpms_muted">#FFF5F5F4</color>
-    <color name="lpms_text_primary">#FF1C1917</color>
-    <color name="lpms_text_secondary">#FF78716C</color>
-
-    <color name="lpms_background_dark">#FF0C0A09</color>
-    <color name="lpms_surface_dark">#FF1C1917</color>
-
-    <color name="lpms_success">#FF15803D</color>
-    <color name="lpms_warning">#FFB45309</color>
-    <color name="lpms_debt">#FFB45309</color>
-    <color name="lpms_danger">#FFB91C1C</color>
-
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="stock_ok">#FF2E7D32</color>
+    <color name="stock_low">#FFEF6C00</color>
+    <color name="stock_critical">#FFC62828</color>
 </resources>

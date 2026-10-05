@@ -58,6 +58,10 @@ public class Drug extends BaseEntity {
     @Column(length = 500)
     private String description;
 
+    /** Default selling price used by the POS when a sale line carries no explicit price. */
+    @Column(name = "selling_price", precision = 19, scale = 4)
+    private java.math.BigDecimal sellingPrice;
+
     /** Threshold below/at which the drug is reported as low stock. */
     @Column(name = "minimum_stock_level", nullable = false)
     private int minimumStockLevel;
@@ -131,6 +135,14 @@ public class Drug extends BaseEntity {
 
     public void setStrength(String strength) {
         this.strength = strength;
+    }
+
+    public java.math.BigDecimal getSellingPrice() {
+        return sellingPrice;
+    }
+
+    public void setSellingPrice(java.math.BigDecimal sellingPrice) {
+        this.sellingPrice = sellingPrice;
     }
 
     public String getUnit() {

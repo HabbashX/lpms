@@ -13,7 +13,7 @@ public record CreateSaleItemRequest(
         @Positive(message = "quantity must be positive")
         Integer quantity,
 
-        @NotNull(message = "unitSellingPrice is required")
+        /** Optional: when omitted the drug's default selling price is used. */
         @Positive(message = "unitSellingPrice must be positive")
         BigDecimal unitSellingPrice) {
 }
