@@ -71,7 +71,7 @@ public final class SessionGateViewModel extends ViewModel {
         }
         // A stored session whose refresh token already expired cannot be renewed: do not
         // spend a round trip on it.
-        if (current.isRefreshTokenExpired()) {
+        if (!current.getRefreshToken().isEmpty() && current.isRefreshTokenExpired()) {
             sessionManager.onSessionUnrecoverable(com.lpms.core.error.ApiError.of(
                     401, com.lpms.core.error.ApiErrorCodes.INVALID_REFRESH_TOKEN,
                     "Your session has expired. Please sign in again."));
@@ -102,8 +102,8 @@ public final class SessionGateViewModel extends ViewModel {
                 .equals(apiError.getCode())) {
             return UiState.content(Destination.CHANGE_PASSWORD);
         }
-        // Any other rejection (401 not refreshable, 404, …): the session layer has
-        // already cleared storage where appropriate.
+        // Any other rejection (401 that could not be refreshed, 404, …): the session layer
+        // has already cleared storage, so Login is correct.
         return UiState.content(Destination.LOGIN);
     }
 

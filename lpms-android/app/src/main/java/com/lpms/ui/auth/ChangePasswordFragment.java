@@ -82,12 +82,12 @@ public final class ChangePasswordFragment extends Fragment {
             binding.progress.setVisibility(busy ? View.VISIBLE : View.INVISIBLE);
         });
 
-        viewModel.currentPasswordError().observe(getViewLifecycleOwner(), message ->
-                applyError(binding.currentPasswordLayout, message));
-        viewModel.newPasswordError().observe(getViewLifecycleOwner(), message ->
-                applyError(binding.newPasswordLayout, message));
-        viewModel.confirmPasswordError().observe(getViewLifecycleOwner(), message ->
-                applyError(binding.confirmPasswordLayout, message));
+        viewModel.currentPasswordError().observe(getViewLifecycleOwner(), issue ->
+                applyError(binding.currentPasswordLayout, issue));
+        viewModel.newPasswordError().observe(getViewLifecycleOwner(), issue ->
+                applyError(binding.newPasswordLayout, issue));
+        viewModel.confirmPasswordError().observe(getViewLifecycleOwner(), issue ->
+                applyError(binding.confirmPasswordLayout, issue));
 
         viewModel.errorMessage().observe(getViewLifecycleOwner(), message -> {
             binding.errorBanner.setVisibility(message == null ? View.GONE : View.VISIBLE);
@@ -102,7 +102,7 @@ public final class ChangePasswordFragment extends Fragment {
             }
             // All tokens are invalid now; the only correct destination is Login.
             NavHostFragment.findNavController(this)
-                    .navigate(R.id.action_global_login);
+                    .navigate(R.id.loginFragment);
         });
     }
 
@@ -142,13 +142,13 @@ public final class ChangePasswordFragment extends Fragment {
     }
 
     private void applyError(@NonNull com.google.android.material.textfield.TextInputLayout layout,
-                            @Nullable String message) {
-        if (message == null) {
+                            @Nullable com.lpms.ui.common.FormError issue) {
+        if (issue == null) {
             layout.setError(null);
             layout.setErrorEnabled(false);
             return;
         }
-        layout.setError(message);
+        layout.setError(issue.resolve(requireContext()));
         layout.setErrorEnabled(true);
     }
 

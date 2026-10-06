@@ -35,9 +35,9 @@ public final class ChangePasswordViewModel extends ViewModel {
     private final MutableLiveData<Boolean> submitting = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> success = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
-    private final MutableLiveData<String> currentPasswordError = new MutableLiveData<>();
-    private final MutableLiveData<String> newPasswordError = new MutableLiveData<>();
-    private final MutableLiveData<String> confirmPasswordError = new MutableLiveData<>();
+    private final MutableLiveData<com.lpms.ui.common.FormError> currentPasswordError = new MutableLiveData<>();
+    private final MutableLiveData<com.lpms.ui.common.FormError> newPasswordError = new MutableLiveData<>();
+    private final MutableLiveData<com.lpms.ui.common.FormError> confirmPasswordError = new MutableLiveData<>();
     private final MutableLiveData<PasswordPolicy.Result> policy = new MutableLiveData<>();
 
     @Inject
@@ -63,17 +63,17 @@ public final class ChangePasswordViewModel extends ViewModel {
     }
 
     @NonNull
-    public LiveData<String> currentPasswordError() {
+    public LiveData<com.lpms.ui.common.FormError> currentPasswordError() {
         return currentPasswordError;
     }
 
     @NonNull
-    public LiveData<String> newPasswordError() {
+    public LiveData<com.lpms.ui.common.FormError> newPasswordError() {
         return newPasswordError;
     }
 
     @NonNull
-    public LiveData<String> confirmPasswordError() {
+    public LiveData<com.lpms.ui.common.FormError> confirmPasswordError() {
         return confirmPasswordError;
     }
 
@@ -108,14 +108,14 @@ public final class ChangePasswordViewModel extends ViewModel {
 
         boolean valid = true;
         if (currentPassword.trim().isEmpty()) {
-            currentPasswordError.setValue(com.lpms.R.string.error_validation);
+            currentPasswordError.setValue(com.lpms.ui.common.FormError.of(com.lpms.R.string.error_validation));
             valid = false;
         }
         if (!result.isValid()) {
             valid = false;
         }
         if (!newPassword.equals(confirmPassword)) {
-            confirmPasswordError.setValue(com.lpms.R.string.change_password_mismatch);
+            confirmPasswordError.setValue(com.lpms.ui.common.FormError.of(com.lpms.R.string.change_password_mismatch));
             valid = false;
         }
         if (!valid) {
@@ -159,12 +159,12 @@ public final class ChangePasswordViewModel extends ViewModel {
     private void applyServerError(com.lpms.core.error.ApiError error) {
         String currentMessage = error.messageFor("currentPassword");
         if (currentMessage != null) {
-            currentPasswordError.setValue(currentMessage);
+            currentPasswordError.setValue(com.lpms.ui.common.FormError.of(currentMessage));
             return;
         }
         String newMessage = error.messageFor("newPassword");
         if (newMessage != null) {
-            newPasswordError.setValue(newMessage);
+            newPasswordError.setValue(com.lpms.ui.common.FormError.of(newMessage));
             return;
         }
         errorMessage.setValue(error.getMessage());

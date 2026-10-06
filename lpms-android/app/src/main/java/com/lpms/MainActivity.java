@@ -38,11 +38,12 @@ public class MainActivity extends AppCompatActivity {
     private ShellViewModel viewModel;
     private NavController navController;
 
-    /** Destinations that show the bottom bar. */
+    /** Destinations that show the bottom bar; each one is a bottom-nav menu item id. */
     private static final Set<Integer> TOP_LEVEL = new HashSet<>();
 
     static {
         TOP_LEVEL.add(R.id.dashboardFragment);
+        TOP_LEVEL.add(R.id.posFragment);
         TOP_LEVEL.add(R.id.moreFragment);
     }
 
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         if (topLevel && viewModel.mustChangePassword()) {
             // While mustChangePassword is true the server answers everything except
             // change-password/logout/me with 403; keep the user on that screen.
-            navController.navigate(R.id.action_global_changePassword);
+            navController.navigate(R.id.changePasswordFragment);
         }
     }
 
@@ -97,13 +98,13 @@ public class MainActivity extends AppCompatActivity {
         switch (event.getType()) {
             case LOGIN_REQUIRED:
             case SESSION_EXPIRED:
-                navController.navigate(R.id.action_global_login);
+                navController.navigate(R.id.loginFragment);
                 break;
             case LOGGED_OUT:
-                navController.navigate(R.id.action_global_login);
+                navController.navigate(R.id.loginFragment);
                 break;
             case PASSWORD_CHANGE_REQUIRED:
-                navController.navigate(R.id.action_global_changePassword);
+                navController.navigate(R.id.changePasswordFragment);
                 break;
             case PROFILE_CHANGED:
             default:

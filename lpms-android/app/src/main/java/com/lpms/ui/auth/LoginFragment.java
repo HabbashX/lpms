@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.lpms.R;
@@ -38,8 +37,7 @@ public final class LoginFragment extends Fragment {
     private FragmentLoginBinding binding;
     private LoginViewModel viewModel;
 
-    /** Suppresses the text watcher while the ViewModel pushes values back in. */
-    private boolean binding;
+
 
     @Nullable
     @Override
@@ -56,19 +54,9 @@ public final class LoginFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         setUpInputs();
-        setUpServerRow();
         observeViewModel();
-
-        viewModel.checkServer();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Roles are re-read server-side on every request; a fresh probe here means the
-        // connectivity dot is accurate when the user comes back to the screen.
-        viewModel.checkServer();
-    }
 
     private void setUpInputs() {
         binding.username.addTextChangedListener(afterTextChanged(
@@ -98,36 +86,8 @@ public final class LoginFragment extends Fragment {
         });
 
         binding.loginButton.setOnClickListener(v -> submit());
-
-        if (viewModel.isServerUrlConfigurable()) {
-            binding.serverRow.setVisibility(View.VISIBLE);
-            binding.editServerUrl.setText(viewModel.currentServerUrl());
-            binding.saveServerUrl.setOnClickListener(v -> applyServerUrl());
-            binding.resetServerUrl.setOnClickListener(v -> {
-                viewModel.resetServerUrl();
-                binding.editServerUrl.setText(viewModel.currentServerUrl());
-                viewModel.checkServer();
-            });
-        } else {
-            binding.serverRow.setVisibility(View.GONE);
-        }
     }
 
-    private void setUpServerRow() {
-        binding.serverStatus.setText(viewModel.buildFlavorBaseUrl());
-    }
-
-    private void applyServerUrl() {
-        boolean accepted = viewModel.setServerUrl(binding.editServerUrl.getText() == null
-                ? null : binding.editServerUrl.getText().toString());
-        if (!accepted) {
-            binding.serverUrlLayout.setError(getString(R.string.error_invalid_server_url));
-            binding.serverUrlLayout.setErrorEnabled(true);
-            return;
-        }
-        binding.serverUrlLayout.setErrorEnabled(false);
-        viewModel.checkServer();
-    }
 
     private void submit() {
         clearError();
@@ -148,22 +108,18 @@ public final class LoginFragment extends Fragment {
                 return;
             }
             int action = next == LoginViewModel.Next.CHANGE_PASSWORD
-                    ? R.id.action_global_changePassword
-                    : R.id.action_global_home;
+                    ? R.id.changePasswordFragment
+                    : R.id.dashboardFragment;
             NavHostFragment.findNavController(this).navigate(action);
         });
 
         viewModel.error().observe(getViewLifecycleOwner(), this::renderError);
 
-        viewModel.checkingServer().observe(getViewLifecycleOwner(), checking ->
-                binding.serverStatus.setText(Boolean.TRUE.equals(checking)
-                        ? getString(R.string.waking_up_server)
-                        : viewModel.buildFlavorBaseUrl()));
+        // Shown only when a login attempt fails with a transport error: tells the user
+        // whether the deployed server is asleep or the device is offline.
+        viewModel.connectivityHintRes().observe(getViewLifecycleOwner(), res ->
+                showBanner(res == null ? "" : getString(res)));
 
-        viewModel.serverReachable().observe(getViewLifecycleOwner(), reachable ->
-                binding.serverStatusDot.setBackgroundResource(Boolean.TRUE.equals(reachable)
-                        ? R.drawable.bg_dot_ok
-                        : R.drawable.bg_dot_error));
 
         viewModel.rateLimitCountdown().observe(getViewLifecycleOwner(), seconds -> {
             long value = seconds == null ? 0L : seconds;
@@ -235,12 +191,14 @@ public final class LoginFragment extends Fragment {
         layout.setErrorEnabled(true);
     }
 
+    /** Inline banner: inline is better than a snackbar for errors tied to this form. */
     private void showBanner(@NonNull String message) {
-        Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
+        binding.errorBanner.setText(message);
+        binding.errorBanner.setVisibility(View.VISIBLE);
     }
 
     private void clearError() {
-        if (!binding) {
+        if (binding == null) {
             return;
         }
         binding.errorBanner.setVisibility(View.GONE);

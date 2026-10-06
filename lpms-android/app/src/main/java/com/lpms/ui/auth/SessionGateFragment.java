@@ -72,14 +72,14 @@ public final class SessionGateFragment extends Fragment {
         int action;
         switch (destination) {
             case CHANGE_PASSWORD:
-                action = R.id.action_global_changePassword;
+                action = R.id.changePasswordFragment;
                 break;
             case HOME:
-                action = R.id.action_global_home;
+                action = R.id.dashboardFragment;
                 break;
             case LOGIN:
             default:
-                action = R.id.action_global_login;
+                action = R.id.loginFragment;
                 break;
         }
         // popUpTo(start) so Back from the first real screen returns to the launcher

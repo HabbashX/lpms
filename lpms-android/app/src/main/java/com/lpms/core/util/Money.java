@@ -158,12 +158,10 @@ public final class Money {
     }
 
     public static boolean isRtl(@NonNull Locale locale) {
-        String script = "und";
-        try {
-            script = java.util.Locale.Builder.of().setLanguage(locale.getLanguage()).build()
-                    .getScript();
-        } catch (RuntimeException ignored) {
-            // Fall through to the script check below.
+        String script = locale.getScript();
+        if (script == null || script.isEmpty()) {
+            // Locale.getScript() is empty on older releases; fall back to the display name.
+            script = locale.getDisplayName(locale);
         }
         return "Arab".equalsIgnoreCase(script)
                 || "Hebr".equalsIgnoreCase(script)
