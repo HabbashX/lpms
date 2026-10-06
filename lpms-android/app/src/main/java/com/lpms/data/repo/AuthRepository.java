@@ -130,7 +130,12 @@ public final class AuthRepository {
         LogoutRequest body = new LogoutRequest(current == null ? null : current.getRefreshToken());
         return authApi.logout(body)
                 .doOnComplete(sessionManager::logout)
-                .onErrorComplete(sessionManager::logout)
+                .onErrorComplete(throwable -> {
+                    // Local storage is cleared even when the server is unreachable, so the
+                    // user is never left in a half-signed-in state.
+                    sessionManager.logout();
+                    return true;
+                })
                 .subscribeOn(Schedulers.io());
     }
 
