@@ -52,10 +52,7 @@ public final class LpmsGson {
                 .create();
     }
 
-    /** True when this build may log request/response bodies. Never true in release. */
-    public static boolean loggingEnabled() {
-        return BuildConfig.ENABLE_NETWORK_LOGGING;
-    }
+
 
     /** Marker used by reflection-free tests to assert field naming is stable. */
     public static boolean isSerializedNamePresent(Class<?> type, String fieldName) {

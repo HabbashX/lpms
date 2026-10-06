@@ -4,11 +4,12 @@ import android.content.Context;
 
 import com.google.gson.Gson;
 import com.lpms.BuildConfig;
+import com.lpms.core.auth.OkHttpTokenRefresher;
 import com.lpms.core.auth.SessionManager;
 import com.lpms.core.auth.SessionStore;
+import com.lpms.core.auth.TokenRefresher;
 import com.lpms.core.error.ApiErrorMapper;
 import com.lpms.core.network.AuthInterceptor;
-import com.lpms.core.network.BaseUrlInterceptor;
 import com.lpms.core.network.ServerUrl;
 import com.lpms.core.network.TokenAuthenticator;
 import com.lpms.core.network.json.LpmsGson;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
@@ -35,10 +37,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * <p>OkHttp interceptor order (application interceptors run in registration
  * order):</p>
  * <ol>
- *   <li>{@link BaseUrlInterceptor} — dev-only host override, must run first.</li>
  *   <li>{@link AuthInterceptor} — attaches the bearer token.</li>
  *   <li>logging interceptor — debug builds only.</li>
  * </ol>
+ *
+ * <p>All traffic goes to the single HTTPS endpoint in {@link ServerUrl}.</p>
  *
  * <p>{@link TokenAuthenticator} is registered via {@code authenticator()} rather
  * than as an interceptor so it runs only after a 401 response, and OkHttp caps it at
@@ -73,8 +76,8 @@ public final class NetworkModule {
 
     @Provides
     @Singleton
-    public static ServerUrl provideServerUrl(AppPreferences preferences) {
-        return new ServerUrl(preferences);
+    public static ServerUrl provideServerUrl() {
+        return new ServerUrl();
     }
 
     @Provides
@@ -85,21 +88,17 @@ public final class NetworkModule {
 
     @Provides
     @Singleton
-    public static OkHttpClient provideOkHttpClient(BaseUrlInterceptor baseUrlInterceptor,
-                                                  AuthInterceptor authInterceptor,
+    public static OkHttpClient provideOkHttpClient(AuthInterceptor authInterceptor,
                                                   TokenAuthenticator authenticator) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                // Keep POSTs honest: the backend has no idempotency keys, so OkHttp
-                // must not silently replay a request that may have been processed.
                 .retryOnConnectionFailure(false)
-                .addInterceptor(baseUrlInterceptor)
                 .addInterceptor(authInterceptor)
                 .authenticator(authenticator);
 
-        if (BuildConfig.ENABLE_NETWORK_LOGGING) {
+        if (BuildConfig.DEBUG) {
             builder.addInterceptor(loggingInterceptor());
         }
         return builder.build();
@@ -124,4 +123,21 @@ public final class NetworkModule {
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
                 .build();
     }
+}
+
+/** Interface → implementation bindings for the network/auth graph. */
+@Module
+@InstallIn(SingletonComponent.class)
+abstract class AuthBindingsModule {
+
+    private AuthBindingsModule() {
+    }
+
+    /**
+     * The OkHttp authenticator depends on the {@link com.lpms.core.auth.TokenRefresher}
+     * interface, never on the concrete implementation.
+     */
+    @Binds
+    @Singleton
+    abstract TokenRefresher bindTokenRefresher(OkHttpTokenRefresher refresher);
 }

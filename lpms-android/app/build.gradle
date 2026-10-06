@@ -17,26 +17,10 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += ["en", "ar"]
-    }
 
-    flavorDimensions += "environment"
-    productFlavors {
-        dev {
-            dimension "environment"
-            applicationIdSuffix ".dev"
-            versionNameSuffix "-dev"
-            buildConfigField "String", "BASE_URL", "\"${project.findProperty('lpms.dev.baseUrl')}\""
-            buildConfigField "String", "API_PREFIX", "\"/api/v1/\""
-            buildConfigField "boolean", "ALLOW_SERVER_URL_OVERRIDE", "${project.findProperty('lpms.allowServerUrlOverride')}"
-            buildConfigField "boolean", "ENABLE_NETWORK_LOGGING", "true"
-        }
-        prod {
-            dimension "environment"
-            buildConfigField "String", "BASE_URL", "\"${project.findProperty('lpms.prod.baseUrl')}\""
-            buildConfigField "String", "API_PREFIX", "\"/api/v1/\""
-            buildConfigField "boolean", "ALLOW_SERVER_URL_OVERRIDE", "false"
-            buildConfigField "boolean", "ENABLE_NETWORK_LOGGING", "false"
-        }
+        // The only backend this app talks to. Change lpms.baseUrl in gradle.properties.
+        buildConfigField "String", "BASE_URL", "\"${project.findProperty('lpms.baseUrl')}\""
+        buildConfigField "String", "API_PREFIX", "\"/api/v1/\""
     }
 
     buildTypes {
