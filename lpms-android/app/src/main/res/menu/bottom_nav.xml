@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bottom navigation. POS sits in the middle as the primary action: selling is the
+  single most-used screen on the floor, so it gets a permanent button instead of being
+  buried in the More hub.
+-->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/dashboardFragment"
         android:icon="@drawable/ic_nav_dashboard"
         android:title="@string/nav_dashboard" />
+
+    <item
+        android:id="@+id/posFragment"
+        android:icon="@drawable/ic_nav_pos"
+        android:title="@string/nav_sell" />
+
     <item
         android:id="@+id/moreFragment"
         android:icon="@drawable/ic_nav_more"

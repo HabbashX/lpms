@@ -41,6 +41,119 @@
         android:name="com.lpms.ui.more.MoreFragment"
         android:label="@string/nav_more" />
 
+    <!-- Drugs + categories. Writes (form, deactivate) are gated to ADMIN/PHARMACIST in
+         the UI; the server enforces it as well. -->
+    <fragment
+        android:id="@+id/drugListFragment"
+        android:name="com.lpms.ui.drugs.DrugListFragment"
+        android:label="@string/nav_drugs">
+
+        <argument
+            android:name="drugId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_drugList_to_drugDetail"
+            app:destination="@id/drugDetailFragment" />
+
+        <action
+            android:id="@+id/action_drugList_to_drugForm"
+            app:destination="@id/drugFormFragment" />
+
+        <action
+            android:id="@+id/action_drugList_to_categories"
+            app:destination="@id/categoriesFragment" />
+
+        <action
+            android:id="@+id/action_drugList_to_pricing"
+            app:destination="@id/drugPricingFragment" />
+
+        <action
+            android:id="@+id/action_drugList_to_receiveStock"
+            app:destination="@id/receiveStockFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/drugDetailFragment"
+        android:name="com.lpms.ui.drugs.DrugDetailFragment"
+        android:label="@string/nav_drugs">
+
+        <argument
+            android:name="drugId"
+            app:argType="long" />
+
+<action
+            android:id="@+id/action_drugDetail_to_drugForm"
+            app:destination="@id/drugFormFragment" />
+
+        <action
+            android:id="@+id/action_drugDetail_to_pricing"
+            app:destination="@id/drugPricingFragment" />
+
+        <action
+            android:id="@+id/action_drugDetail_to_receiveStock"
+            app:destination="@id/receiveStockFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/drugFormFragment"
+        android:name="com.lpms.ui.drugs.DrugFormFragment"
+        android:label="@string/drug_add_title">
+
+        <!-- drugId > 0 edits that drug; absent/0 creates a new one. -->
+        <argument
+            android:name="drugId"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/categoriesFragment"
+        android:name="com.lpms.ui.categories.CategoriesFragment"
+        android:label="@string/nav_categories" />
+
+    <!-- Recommended pricing: ADMIN/PHARMACIST only (the endpoint exposes cost). -->
+    <fragment
+        android:id="@+id/drugPricingFragment"
+        android:name="com.lpms.ui.pricing.DrugPricingFragment"
+        android:label="@string/pricing_title">
+
+        <argument
+            android:name="drugId"
+            app:argType="long" />
+    </fragment>
+
+    <!-- Receive stock: ADMIN/PHARMACIST. Creates an immutable batch. -->
+    <fragment
+        android:id="@+id/receiveStockFragment"
+        android:name="com.lpms.ui.inventory.ReceiveStockFragment"
+        android:label="@string/stock_receive_title" />
+
+    <!-- Point of sale. Holds the scanner host so the camera fragment can be added
+         over it; confirmation lands on the receipt screen. -->
+    <fragment
+        android:id="@+id/posFragment"
+        android:name="com.lpms.ui.pos.PosFragment"
+        android:label="@string/nav_pos">
+
+        <action
+            android:id="@+id/action_pos_to_saleDetail"
+            app:destination="@id/saleDetailFragment"
+            app:popUpTo="@id/posFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/saleDetailFragment"
+        android:name="com.lpms.ui.sales.SaleDetailFragment"
+        android:label="@string/nav_sales">
+
+        <argument
+            android:name="saleId"
+            app:argType="long" />
+    </fragment>
+
     <action
         android:id="@+id/action_global_login"
         app:destination="@id/loginFragment"
@@ -66,4 +179,16 @@
     <action
         android:id="@+id/action_global_more"
         app:destination="@id/moreFragment" />
+
+    <action
+        android:id="@+id/action_global_drugs"
+        app:destination="@id/drugListFragment" />
+
+    <action
+        android:id="@+id/action_global_categories"
+        app:destination="@id/categoriesFragment" />
+
+    <action
+        android:id="@+id/action_global_pos"
+        app:destination="@id/posFragment" />
 </navigation>
