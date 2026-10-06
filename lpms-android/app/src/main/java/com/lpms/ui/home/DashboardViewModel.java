@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.lpms.core.auth.Role;
 import com.lpms.core.auth.SessionManager;
-import com.lpms.core.error.ApiError;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.ui.UiState;
 import com.lpms.data.dto.DashboardResponse;
@@ -94,18 +93,14 @@ public final class DashboardViewModel extends ViewModel {
                         },
                         throwable -> {
                             refreshing.setValue(false);
-                            // Show the error only if there is nothing to keep on screen;
-                            // otherwise a snackbar-style message is enough.
-                            if (!state.getValue().isContent()) {
-                                state.setValue(UiState.error(NetworkCall.asApiError(throwable)));
+                            // Keep existing content on screen: an empty screen with an
+                            // error state is only for the very first load.
+                            UiState<DashboardResponse> current = state.getValue();
+                            if (current == null || !current.isContent()) {
+                                state.setValue(UiState.error(
+                                        NetworkCall.asApiError(throwable)));
                             }
                         }));
-    }
-
-    /** Full error for a snackbar when a refresh failed over existing content. */
-    @NonNull
-    public static ApiError errorOf(@NonNull Throwable throwable) {
-        return NetworkCall.asApiError(throwable);
     }
 
     @Override
