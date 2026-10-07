@@ -23,6 +23,7 @@ import com.lpms.data.dto.CategoryResponse;
 import com.lpms.data.dto.DosageForm;
 import com.lpms.databinding.FragmentDrugFormBinding;
 import com.lpms.ui.common.FormError;
+import com.lpms.ui.pos.scan.BarcodeScanner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +50,13 @@ public final class DrugFormFragment extends Fragment {
     /** Guards the dropdown text watcher while the loaded drug is written into the fields. */
     private boolean populating;
 
+    /**
+     * Set once the drug exists but its opening stock did not save. The save button then
+     * closes the screen instead of posting again, which would fail on the duplicate
+     * barcode and leave the user stuck on a form that can never succeed.
+     */
+    private boolean stockFailed;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -74,6 +82,23 @@ public final class DrugFormFragment extends Fragment {
         setUpDosageFormDropdown();
         setUpValidationWatchers();
 
+        // Stock is only ever changed by a purchase, so the section is offered in both modes:
+        // on create it is the opening batch, on edit it adds to what is already there.
+        if (viewModel.isEditing()) {
+            binding.openingTitle.setText(R.string.drug_add_stock_title);
+            binding.openingBody.setText(R.string.drug_add_stock_body);
+        } else {
+            binding.openingTitle.setText(R.string.drug_opening_stock_title);
+            binding.openingBody.setText(R.string.drug_opening_stock_body);
+        }
+
+        // Type the barcode by hand, or scan it. The end icon is the only way to open the
+        // camera, so manual entry stays first-class.
+        binding.barcodeLayout.setEndIconOnClickListener(v -> BarcodeScanner.launch(this, code -> {
+            binding.barcode.setText(code);
+            binding.barcode.setSelection(code.length());
+        }));
+
         binding.saveButton.setOnClickListener(v -> save());
         binding.sellingPriceLayout.setHelperText(getString(R.string.drug_selling_price_hint));
 
@@ -89,6 +114,32 @@ public final class DrugFormFragment extends Fragment {
                 applyError(binding.sellingPriceLayout, issue));
         viewModel.minimumStockError().observe(getViewLifecycleOwner(), issue ->
                 applyError(binding.minimumStockLayout, issue));
+        viewModel.openingQuantityError().observe(getViewLifecycleOwner(), issue ->
+                applyError(binding.openingQuantityLayout, issue));
+        viewModel.openingCostError().observe(getViewLifecycleOwner(), issue ->
+                applyError(binding.openingCostLayout, issue));
+        viewModel.openingExpirationError().observe(getViewLifecycleOwner(), issue ->
+                applyError(binding.openingExpirationLayout, issue));
+        viewModel.stockFailed().observe(getViewLifecycleOwner(), detail -> {
+            if (detail == null) {
+                return;
+            }
+            String reason = detail == null ? "" : detail.trim();
+            String text = reason.isEmpty()
+                    ? getString(R.string.drug_opening_stock_failed)
+                    : getString(R.string.drug_opening_stock_failed_detail, reason);
+            // LENGTH_INDEFINITE: this is not transient, the user has to acknowledge it and
+            // add the stock from Receive stock.
+            Snackbar.make(binding.getRoot(), text, Snackbar.LENGTH_INDEFINITE).show();
+            if (viewModel.isEditing()) {
+                // Re-saving an edit only re-sends the PUT, so retrying is safe.
+                return;
+            }
+            // On create the drug already exists: another attempt would fail with
+            // 409 BARCODE_ALREADY_EXISTS and the form could never succeed.
+            stockFailed = true;
+            binding.saveButton.setText(R.string.drug_opening_finish);
+        });
         viewModel.message().observe(getViewLifecycleOwner(), issue -> {
             if (issue == null) {
                 return;
@@ -120,6 +171,9 @@ public final class DrugFormFragment extends Fragment {
         clearErrorOnType(binding.barcode, binding.barcodeLayout);
         clearErrorOnType(binding.sellingPrice, binding.sellingPriceLayout);
         clearErrorOnType(binding.minimumStockLevel, binding.minimumStockLayout);
+        clearErrorOnType(binding.openingQuantity, binding.openingQuantityLayout);
+        clearErrorOnType(binding.openingCost, binding.openingCostLayout);
+        clearErrorOnType(binding.openingExpiration, binding.openingExpirationLayout);
         binding.name.setOnFocusChangeListener((v, focused) -> {
             if (!focused) {
                 viewModel.clearErrors();
@@ -246,6 +300,10 @@ public final class DrugFormFragment extends Fragment {
     }
 
     private void save() {
+        if (stockFailed) {
+            NavHostFragment.findNavController(this).navigateUp();
+            return;
+        }
         viewModel.save(
                 text(binding.name),
                 text(binding.genericName),
@@ -258,7 +316,12 @@ public final class DrugFormFragment extends Fragment {
                 text(binding.sellingPrice),
                 text(binding.description),
                 text(binding.minimumStockLevel),
-                binding.activeSwitch.isChecked());
+                binding.activeSwitch.isChecked(),
+                text(binding.openingQuantity),
+                text(binding.openingCost),
+                text(binding.openingSupplier),
+                text(binding.openingBatchNumber),
+                text(binding.openingExpiration));
     }
 
     private void applyError(@NonNull com.google.android.material.textfield.TextInputLayout layout,

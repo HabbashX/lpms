@@ -111,6 +111,23 @@
     <string name="drug_selling_price_hint">اتركه فارغًا إذا كان الكاشير يكتب السعر عند البيع</string>
     <string name="drug_minimum_stock">الحد الأدنى للمخزون</string>
     <string name="drug_description">الوصف</string>
+
+    <!-- Opening stock, recorded as the drug\'s first purchase -->
+    <string name="drug_opening_stock_title">المخزون الافتتاحي (اختياري)</string>
+    <string name="drug_opening_stock_body">يُحفظ كعملية شراء، لذا يبدأ هذا الدواء بتكلفة حقيقية ودفعة قابلة للتتبع. اتركه فارغًا لإضافة المخزون لاحقًا.</string>
+    <string name="drug_opening_quantity">الكمية الافتتاحية</string>
+    <string name="drug_opening_cost">سعر الشراء للوحدة</string>
+    <string name="drug_opening_batch">رقم الدفعة (اختياري)</string>
+    <string name="drug_opening_expiration">تاريخ انتهاء الصلاحية (اختياري)</string>
+    <string name="drug_opening_supplier">المورّد (اختياري)</string>
+    <string name="drug_opening_error_quantity_required">أدخل الكمية الافتتاحية أو امسح هذا القسم</string>
+    <string name="drug_opening_error_cost_required">أدخل سعر الشراء للوحدة أو امسح هذا القسم</string>
+    <string name="drug_opening_stock_failed">تم إنشاء الدواء، لكن لم يُحفظ المخزون الافتتاحي. افتح \"استلام بضاعة\" لإضافته.</string>
+    <string name="drug_opening_stock_failed_detail">تم إنشاء الدواء، لكن لم يُحفظ مخزونه الافتتاحي (%1$s). افتح \"استلام بضاعة\" لإضافته.</string>
+    <string name="drug_opening_finish">إغلاق</string>
+    <string name="drug_add_stock_title">إضافة مخزون (اختياري)</string>
+    <string name="drug_add_stock_body">يُحفظ كعملية شراء أخرى تُضاف إلى المخزون الحالي. اتركه فارغًا لتعديل الدواء دون استلام بضاعة.</string>
+    <string name="drug_barcode_scan">مسح الباركود</string>
     <string name="drug_manufacturer">الشركة المصنعة</string>
     <string name="drug_dosage_form">الشكل الصيدلاني</string>
     <string name="drug_strength">التركيز</string>

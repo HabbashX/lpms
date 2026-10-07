@@ -117,6 +117,23 @@
     <string name="drug_selling_price_hint">Leave empty if the cashier types a price at sale time</string>
     <string name="drug_minimum_stock">Minimum stock level</string>
     <string name="drug_description">Description</string>
+
+    <!-- Opening stock, recorded as the drug\'s first purchase -->
+    <string name="drug_opening_stock_title">Opening stock (optional)</string>
+    <string name="drug_opening_stock_body">Saved as a purchase, so this drug starts with a real cost and a tracked batch. Leave it empty to add stock later.</string>
+    <string name="drug_opening_quantity">Opening quantity</string>
+    <string name="drug_opening_cost">Purchase price per unit</string>
+    <string name="drug_opening_batch">Batch number (optional)</string>
+    <string name="drug_opening_expiration">Expiration date (optional)</string>
+    <string name="drug_opening_supplier">Supplier (optional)</string>
+    <string name="drug_opening_error_quantity_required">Enter the opening quantity, or clear this section</string>
+    <string name="drug_opening_error_cost_required">Enter the purchase price per unit, or clear this section</string>
+    <string name="drug_opening_stock_failed">The drug was created, but the opening stock was not saved. Open Receive stock to add it.</string>
+    <string name="drug_opening_stock_failed_detail">The drug was created, but its opening stock was not saved (%1$s). Open Receive stock to add it.</string>
+    <string name="drug_opening_finish">Close</string>
+    <string name="drug_add_stock_title">Add stock (optional)</string>
+    <string name="drug_add_stock_body">Saved as another purchase, added to the current stock. Leave it empty to change the drug without receiving stock.</string>
+    <string name="drug_barcode_scan">Scan barcode</string>
     <string name="drug_manufacturer">Manufacturer</string>
     <string name="drug_dosage_form">Dosage form</string>
     <string name="drug_strength">Strength</string>

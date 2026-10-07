@@ -10,14 +10,17 @@ import com.lpms.core.ui.UiState;
 import com.lpms.core.util.Money;
 import com.lpms.data.dto.CategoryResponse;
 import com.lpms.data.dto.CreateDrugRequest;
+import com.lpms.data.dto.CreatePurchaseRequest;
 import com.lpms.data.dto.DosageForm;
 import com.lpms.data.dto.DrugResponse;
 import com.lpms.data.dto.UpdateDrugRequest;
 import com.lpms.data.repo.CategoryRepository;
 import com.lpms.data.repo.DrugRepository;
+import com.lpms.data.repo.InventoryRepository;
 import com.lpms.ui.common.FormError;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +32,7 @@ import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 /**
@@ -41,6 +45,12 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
  *
  * <p>{@code categoryId} from the cached category list is always sent; the legacy
  * free-text {@code category} field is never populated.</p>
+ *
+ * <p>When the stock section at the bottom is filled in, it is recorded as a real purchase
+ * (POST /inventory/drugs/{drugId}/purchases) rather than as a bare number on the drug, on
+ * create and on edit alike. Stock therefore only ever moves through a purchase, which is
+ * what the backend models: every unit keeps a cost, a batch and an expiry. The save and
+ * that purchase are not atomic - see {@link #stockFailed()}.</p>
  */
 @HiltViewModel
 public final class DrugFormViewModel extends ViewModel {
@@ -101,6 +111,7 @@ public final class DrugFormViewModel extends ViewModel {
 
     private final DrugRepository drugRepository;
     private final CategoryRepository categoryRepository;
+    private final InventoryRepository inventoryRepository;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final long drugId;
@@ -113,15 +124,28 @@ public final class DrugFormViewModel extends ViewModel {
     private final MutableLiveData<FormError> barcodeError = new MutableLiveData<>();
     private final MutableLiveData<FormError> priceError = new MutableLiveData<>();
     private final MutableLiveData<FormError> minimumStockError = new MutableLiveData<>();
+    private final MutableLiveData<FormError> openingQuantityError = new MutableLiveData<>();
+    private final MutableLiveData<FormError> openingCostError = new MutableLiveData<>();
+    private final MutableLiveData<FormError> openingExpirationError = new MutableLiveData<>();
     private final MutableLiveData<FormError> message = new MutableLiveData<>();
     private final MutableLiveData<Long> savedDrugId = new MutableLiveData<>();
+
+    /**
+     * Non-null when the drug was created but its opening stock could not be. Holds the
+     * server detail, or an empty string when there was none. The screen must not offer a
+     * retry: the drug already exists, so re-running the create would fail with
+     * 409 BARCODE_ALREADY_EXISTS and the user would be stuck.
+     */
+    private final MutableLiveData<String> stockFailed = new MutableLiveData<>();
 
     @Inject
     public DrugFormViewModel(@NonNull DrugRepository drugRepository,
                              @NonNull CategoryRepository categoryRepository,
+                             @NonNull InventoryRepository inventoryRepository,
                              @NonNull SavedStateHandle handle) {
         this.drugRepository = drugRepository;
         this.categoryRepository = categoryRepository;
+        this.inventoryRepository = inventoryRepository;
         Long id = handle.get(DrugListFragment.ARG_DRUG_ID);
         this.drugId = id == null ? 0L : id;
     }
@@ -162,6 +186,21 @@ public final class DrugFormViewModel extends ViewModel {
     }
 
     @NonNull
+    public LiveData<FormError> openingQuantityError() {
+        return openingQuantityError;
+    }
+
+    @NonNull
+    public LiveData<FormError> openingCostError() {
+        return openingCostError;
+    }
+
+    @NonNull
+    public LiveData<FormError> openingExpirationError() {
+        return openingExpirationError;
+    }
+
+    @NonNull
     public LiveData<FormError> message() {
         return message;
     }
@@ -170,6 +209,12 @@ public final class DrugFormViewModel extends ViewModel {
     @NonNull
     public LiveData<Long> saved() {
         return savedDrugId;
+    }
+
+    /** Emits when the drug was created but its opening stock was not saved. */
+    @NonNull
+    public LiveData<String> stockFailed() {
+        return stockFailed;
     }
 
     public boolean isEditing() {
@@ -220,6 +265,10 @@ public final class DrugFormViewModel extends ViewModel {
     /**
      * Validates and saves. On success the request is a POST (create) or PUT (edit); the
      * server owns barcode uniqueness and category validity.
+     *
+     * <p>When the stock section is filled in, the save is followed by a purchase against
+     * the saved drug. The backend requires {@code quantity} and {@code unitPurchasePrice}
+     * together, so both are validated as soon as any field in that section is used.</p>
      */
     public void save(@NonNull String name,
                      @Nullable String genericName,
@@ -232,7 +281,12 @@ public final class DrugFormViewModel extends ViewModel {
                      @Nullable String sellingPriceText,
                      @Nullable String description,
                      @Nullable String minimumStockText,
-                     boolean active) {
+                     boolean active,
+                     @Nullable String openingQuantityText,
+                     @Nullable String openingCostText,
+                     @Nullable String openingSupplierText,
+                     @Nullable String openingBatchText,
+                     @Nullable String openingExpirationText) {
 
         if (Boolean.TRUE.equals(submitting.getValue())) {
             return;
@@ -272,6 +326,12 @@ public final class DrugFormViewModel extends ViewModel {
             }
         }
 
+        OpeningStock opening = readOpeningStock(openingQuantityText, openingCostText,
+                openingSupplierText, openingBatchText, openingExpirationText);
+        if (opening == null) {
+            valid = false;
+        }
+
         if (!valid) {
             return;
         }
@@ -297,9 +357,15 @@ public final class DrugFormViewModel extends ViewModel {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             saved -> {
-                                submitting.setValue(false);
                                 categoryRepository.invalidate();
-                                savedDrugId.setValue(drugId);
+                                if (opening == null || opening.quantity == null) {
+                                    submitting.setValue(false);
+                                    savedDrugId.setValue(drugId);
+                                    return;
+                                }
+                                // The drug already exists, so the stock lands as another
+                                // purchase on top of the current quantity.
+                                sendPurchase(drugId, opening);
                             },
                             throwable -> onSaveFailed(throwable)));
             return;
@@ -319,13 +385,193 @@ public final class DrugFormViewModel extends ViewModel {
                 minimumStock);
         disposables.add(drugRepository.create(request)
                 .observeOn(AndroidSchedulers.mainThread())
+                .map(saved -> saved.getId() == null ? 0L : saved.getId())
+                .flatMap(newId -> {
+                    if (opening == null || opening.quantity == null || newId == 0L) {
+                        return Single.just(new CreateOutcome(newId, null));
+                    }
+                    // The drug exists now, so the purchase can name it. noPricingChange is
+                    // deliberate: the selling price already went out with the drug, and a
+                    // purchase may carry only one pricing effect.
+                    return inventoryRepository.purchase(CreatePurchaseRequest.noPricingChange(
+                                    newId,
+                                    opening.quantity,
+                                    opening.unitCost,
+                                    opening.supplier,
+                                    opening.batchNumber,
+                                    opening.expiration))
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .map(batch -> new CreateOutcome(newId, null))
+                            // The drug is already saved at this point, so the failure must
+                            // not propagate as a save error and must not be retried.
+                            .onErrorReturn(throwable -> new CreateOutcome(newId,
+                                    NetworkCall.asApiError(throwable).getMessage()));
+                })
                 .subscribe(
-                        saved -> {
+                        outcome -> {
                             submitting.setValue(false);
                             categoryRepository.invalidate();
-                            savedDrugId.setValue(saved.getId() == null ? 0L : saved.getId());
+                            if (outcome.stockError != null) {
+                                stockFailed.setValue(outcome.stockError);
+                            }
+                            savedDrugId.setValue(outcome.drugId);
                         },
                         throwable -> onSaveFailed(throwable)));
+    }
+
+    /**
+ * Records stock against an existing drug and finishes the save. Used by the edit path,
+ * where the drug PUT already succeeded, so a failure here is reported through
+ * {@link #stockFailed()} rather than as a save error.
+ */
+private void sendPurchase(long drugId, @NonNull OpeningStock opening) {
+        disposables.add(inventoryRepository.purchase(CreatePurchaseRequest.noPricingChange(
+                        drugId,
+                        opening.quantity,
+                        opening.unitCost,
+                        opening.supplier,
+                        opening.batchNumber,
+                        opening.expiration))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        batch -> {
+                            submitting.setValue(false);
+                            savedDrugId.setValue(drugId);
+                        },
+                        throwable -> {
+                            submitting.setValue(false);
+                            stockFailed.setValue(
+                                    NetworkCall.asApiError(throwable).getMessage());
+                        }));
+    }
+
+    /** Result of create-then-purchase, so a stock failure cannot be mistaken for success. */
+    private static final class CreateOutcome {
+
+        final long drugId;
+        @Nullable
+        final String stockError;
+
+        CreateOutcome(long drugId, @Nullable String stockError) {
+            this.drugId = drugId;
+            this.stockError = stockError;
+        }
+    }
+
+    /**
+     * Validated opening stock. {@code quantity} is null when the section was left empty,
+     * which means no purchase is sent at all.
+     */
+    private static final class OpeningStock {
+
+        final Integer quantity;
+        final BigDecimal unitCost;
+        @Nullable
+        final String supplier;
+        @Nullable
+        final String batchNumber;
+        @Nullable
+        final LocalDate expiration;
+
+        OpeningStock(Integer quantity,
+                     BigDecimal unitCost,
+                     @Nullable String supplier,
+                     @Nullable String batchNumber,
+                     @Nullable LocalDate expiration) {
+            this.quantity = quantity;
+            this.unitCost = unitCost;
+            this.supplier = supplier;
+            this.batchNumber = batchNumber;
+            this.expiration = expiration;
+        }
+    }
+
+    /**
+     * Reads the stock section. Returns null when anything is invalid, after setting the
+     * matching field error.
+     *
+     * <p>Any field being filled in switches the section on, and the backend requires
+     * {@code quantity} and {@code unitPurchasePrice} together, so both are then required.
+     * That is checked before the optional batch/expiry/supplier are parsed.</p>
+     *
+     * <p>Identical for create and edit: an empty section means no purchase is sent.</p>
+     */
+    @Nullable
+    private OpeningStock readOpeningStock(@Nullable String quantityText,
+                                          @Nullable String costText,
+                                          @Nullable String supplierText,
+                                          @Nullable String batchText,
+                                          @Nullable String expirationText) {
+        boolean touched = isFilled(quantityText) || isFilled(costText)
+                || isFilled(supplierText) || isFilled(batchText) || isFilled(expirationText);
+
+        if (!touched) {
+            return new OpeningStock(null, BigDecimal.ZERO, null, null, null);
+        }
+
+        boolean valid = true;
+
+        Integer quantity = null;
+        BigDecimal unitCost = BigDecimal.ZERO;
+
+        String rawQuantity = quantityText == null ? "" : quantityText.trim();
+        String rawCost = costText == null ? "" : costText.trim();
+
+        if (rawQuantity.isEmpty()) {
+            openingQuantityError.setValue(
+                    FormError.of(R.string.drug_opening_error_quantity_required));
+            valid = false;
+        } else {
+            BigDecimal parsed = Money.parse(rawQuantity);
+            // Whole units only: the backend types quantity as an Integer.
+            if (parsed == null || parsed.signum() <= 0 || parsed.scale() > 0) {
+                openingQuantityError.setValue(FormError.of(R.string.stock_error_quantity));
+                valid = false;
+            } else {
+                quantity = parsed.intValue();
+            }
+        }
+
+        if (rawCost.isEmpty()) {
+            openingCostError.setValue(FormError.of(R.string.drug_opening_error_cost_required));
+            valid = false;
+        } else {
+            BigDecimal parsedCost = Money.parsePositive(rawCost);
+            if (parsedCost == null) {
+                openingCostError.setValue(FormError.of(R.string.stock_error_unit_price));
+                valid = false;
+            } else {
+                unitCost = parsedCost;
+            }
+        }
+
+        LocalDate expiration = null;
+        String rawExpiration = expirationText == null ? "" : expirationText.trim();
+        if (!rawExpiration.isEmpty()) {
+            try {
+                expiration = LocalDate.parse(rawExpiration);
+            } catch (RuntimeException parseFailure) {
+                expiration = null;
+            }
+            if (expiration == null) {
+                openingExpirationError.setValue(FormError.of(R.string.stock_error_expiry_format));
+                valid = false;
+            } else if (expiration.isBefore(LocalDate.now())) {
+                // 400 EXPIRATION_IN_PAST on the server.
+                openingExpirationError.setValue(FormError.of(R.string.stock_error_expiry_past));
+                valid = false;
+            }
+        }
+
+        if (!valid) {
+            return null;
+        }
+        return new OpeningStock(quantity, unitCost, trimToNull(supplierText),
+                trimToNull(batchText), expiration);
+    }
+
+    private static boolean isFilled(@Nullable String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     private void onSaveFailed(@NonNull Throwable throwable) {
@@ -361,6 +607,9 @@ public final class DrugFormViewModel extends ViewModel {
         barcodeError.setValue(null);
         priceError.setValue(null);
         minimumStockError.setValue(null);
+        openingQuantityError.setValue(null);
+        openingCostError.setValue(null);
+        openingExpirationError.setValue(null);
         message.setValue(null);
     }
 
