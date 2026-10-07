@@ -39,7 +39,7 @@ public final class DashboardFragment extends Fragment {
     private DashboardViewModel viewModel;
     private StateRenderer stateRenderer;
     private TopDrugsAdapter topDrugsAdapter;
-    private String currencySymbol = "$";
+    private String currencySymbol = AppPreferences.CURRENCY_DEFAULT;
 
     @Nullable
     @Override

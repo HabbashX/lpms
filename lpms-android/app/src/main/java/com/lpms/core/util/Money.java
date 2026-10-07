@@ -27,7 +27,7 @@ public final class Money {
 
     /**
      * @param symbol currency symbol from local settings (the backend has no currency field)
-     * @return e.g. {@code $1,234.50} in English, {@code ١٬٢٣٤٫٥٠ ر.س}-style grouping in Arabic
+     * @return e.g. {@code ₪1,234.50} in English, {@code ١٬٢٣٤٫٥٠ ₪}-style grouping in Arabic
      */
     @NonNull
     public static String format(@Nullable BigDecimal value, @NonNull String symbol) {

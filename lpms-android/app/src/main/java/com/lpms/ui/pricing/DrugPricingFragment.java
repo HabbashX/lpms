@@ -50,7 +50,7 @@ public final class DrugPricingFragment extends Fragment {
     private FragmentDrugPricingBinding binding;
     private DrugPricingViewModel viewModel;
     private StateRenderer stateRenderer;
-    private String currencySymbol = "$";
+    private String currencySymbol = AppPreferences.CURRENCY_DEFAULT;
 
     @Nullable
     @Override

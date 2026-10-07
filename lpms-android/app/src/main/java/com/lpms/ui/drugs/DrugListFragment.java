@@ -49,7 +49,7 @@ public final class DrugListFragment extends Fragment implements DrugsAdapter.Lis
     private FragmentDrugListBinding binding;
     private DrugListViewModel viewModel;
     private DrugsAdapter adapter;
-    private String currencySymbol = "$";
+    private String currencySymbol = AppPreferences.CURRENCY_DEFAULT;
 
     @Nullable
     @Override

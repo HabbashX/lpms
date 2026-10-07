@@ -53,7 +53,7 @@ public final class SaleDetailFragment extends Fragment {
     private SaleDetailViewModel viewModel;
     private StateRenderer stateRenderer;
     private SaleResponse current;
-    private String currencySymbol = "$";
+    private String currencySymbol = AppPreferences.CURRENCY_DEFAULT;
 
     @Nullable
     @Override

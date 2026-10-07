@@ -50,5 +50,5 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:textAppearance="?attr/textAppearanceTitleSmall"
-        tools:text="$312.00" />
+        tools:text="₪312.00" />
 </LinearLayout>

@@ -52,7 +52,7 @@ public final class PosFragment extends Fragment implements CartAdapter.Listener 
     private PosViewModel viewModel;
     private CartAdapter cartAdapter;
     private DrugsSearchAdapter searchAdapter;
-    private String currencySymbol = "$";
+    private String currencySymbol = AppPreferences.CURRENCY_DEFAULT;
 
     /** Suppresses the text watchers while the ViewModel pushes computed values back. */
     private boolean suppressWatchers;

@@ -44,7 +44,7 @@ public final class ReceiveStockFragment extends Fragment {
     private FragmentReceiveStockBinding binding;
     private ReceiveStockViewModel viewModel;
     private DrugsSearchRows rows;
-    private String currencySymbol = "$";
+    private String currencySymbol = AppPreferences.CURRENCY_DEFAULT;
 
     @Nullable
     @Override

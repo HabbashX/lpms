@@ -10,8 +10,10 @@ import javax.inject.Singleton;
 
 /**
  * Plain preferences for <b>non-secret</b> local settings only: currency symbol,
- * language, theme, and the dev-only server URL override. Credentials never go here
- * — they live in {@link com.lpms.core.auth.SessionStore} (EncryptedSharedPreferences).
+ * language and theme. Credentials never go here — they live in
+ * {@link com.lpms.core.auth.SessionStore} (EncryptedSharedPreferences).
+ *
+ * <p>The API endpoint is not a setting: it is fixed in {@code lpms.baseUrl}.</p>
  */
 @Singleton
 public final class AppPreferences {
@@ -21,9 +23,12 @@ public final class AppPreferences {
     private static final String K_CURRENCY = "currency_symbol";
     private static final String K_LANGUAGE = "language_tag";
     private static final String K_THEME = "theme_mode";
-    private static final String K_SERVER_URL = "server_url_override";
 
-    private static final String DEFAULT_CURRENCY = "$";
+    /**
+     * Israeli new shekel (NIS), U+20AA. Screens use this as their placeholder before the
+     * stored preference is read, so the currency is defined in exactly one place.
+     */
+    public static final String CURRENCY_DEFAULT = "\u20AA";
 
     public static final String THEME_SYSTEM = "system";
     public static final String THEME_LIGHT = "light";
@@ -39,12 +44,12 @@ public final class AppPreferences {
 
     @NonNull
     public String currencySymbol() {
-        return prefs.getString(K_CURRENCY, DEFAULT_CURRENCY);
+        return prefs.getString(K_CURRENCY, CURRENCY_DEFAULT);
     }
 
     public void setCurrencySymbol(@NonNull String symbol) {
         String trimmed = symbol.trim();
-        prefs.edit().putString(K_CURRENCY, trimmed.isEmpty() ? DEFAULT_CURRENCY : trimmed).apply();
+        prefs.edit().putString(K_CURRENCY, trimmed.isEmpty() ? CURRENCY_DEFAULT : trimmed).apply();
     }
 
     /** {@code null} follows the system locale. */
@@ -67,19 +72,5 @@ public final class AppPreferences {
 
     public void setThemeMode(@NonNull String mode) {
         prefs.edit().putString(K_THEME, mode).apply();
-    }
-
-    /** Dev flavor only; empty when unset, in which case BuildConfig.BASE_URL is used. */
-    @NonNull
-    public String serverUrlOverride() {
-        return prefs.getString(K_SERVER_URL, "");
-    }
-
-    public void setServerUrlOverride(@NonNull String url) {
-        prefs.edit().putString(K_SERVER_URL, url.trim()).apply();
-    }
-
-    public void clearServerUrlOverride() {
-        prefs.edit().remove(K_SERVER_URL).apply();
     }
 }

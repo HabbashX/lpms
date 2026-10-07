@@ -153,7 +153,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                            tools:text="$315.00" />
+                            tools:text="₪315.00" />
 
                         <TextView
                             android:id="@+id/suggested_detail"
@@ -162,7 +162,7 @@
                             android:layout_marginTop="4dp"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant"
-                            tools:text="Average cost $265.00 + $50.00" />
+                            tools:text="Average cost ₪265.00 + ₪50.00" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/apply_button"

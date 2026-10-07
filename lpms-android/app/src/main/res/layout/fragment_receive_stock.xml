@@ -302,7 +302,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:textAppearance="?attr/textAppearanceBodyMedium"
-                            tools:text="Average cost: $265.00" />
+                            tools:text="Average cost: ₪265.00" />
 
                         <TextView
                             android:id="@+id/preview_suggested"
@@ -311,7 +311,7 @@
                             android:layout_marginTop="4dp"
                             android:textAppearance="?attr/textAppearanceTitleMedium"
                             android:visibility="gone"
-                            tools:text="New selling price: $315.00"
+                            tools:text="New selling price: ₪315.00"
                             tools:visibility="visible" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

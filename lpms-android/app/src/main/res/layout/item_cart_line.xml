@@ -99,7 +99,7 @@
             android:gravity="end"
             android:layout_marginStart="12dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            tools:text="$25.00" />
+            tools:text="₪25.00" />
 
         <ImageButton
             android:id="@+id/remove"
