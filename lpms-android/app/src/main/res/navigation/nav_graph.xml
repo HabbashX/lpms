@@ -164,6 +164,118 @@
             app:argType="long" />
     </fragment>
 
+    <!-- Reports: profit summary for a period plus the line-level breakdown. -->
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.lpms.ui.reports.ReportsFragment"
+        android:label="@string/reports_title" />
+
+    <!-- Staff accounts. ADMIN only. -->
+    <fragment
+        android:id="@+id/userListFragment"
+        android:name="com.lpms.ui.users.UserListFragment"
+        android:label="@string/nav_users">
+
+        <action
+            android:id="@+id/action_userList_to_userForm"
+            app:destination="@id/userFormFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/userFormFragment"
+        android:name="com.lpms.ui.users.UserFormFragment"
+        android:label="@string/user_add_title">
+
+        <argument
+            android:name="userId"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </fragment>
+
+    <!-- Audit log: read-only. ADMIN only. -->
+    <fragment
+        android:id="@+id/auditListFragment"
+        android:name="com.lpms.ui.audit.AuditListFragment"
+        android:label="@string/nav_audit_log" />
+
+    <!-- Pharmacy settings. ADMIN only. -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.lpms.ui.settings.SettingsFragment"
+        android:label="@string/nav_settings" />
+
+    <!--
+      Inventory. Batches, low stock, expiring batches and valuation are chips on one screen
+      rather than four destinations: they are cross-checked against each other while
+      ordering.
+    -->
+    <fragment
+        android:id="@+id/inventoryFragment"
+        android:name="com.lpms.ui.inventory.InventoryFragment"
+        android:label="@string/inventory_title">
+
+        <action
+            android:id="@+id/action_inventory_to_drugDetail"
+            app:destination="@id/drugDetailFragment" />
+    </fragment>
+
+    <!--
+      Customers. Every role may read and edit them, and the statement screen is where
+      payments are recorded against a debt.
+    -->
+    <fragment
+        android:id="@+id/customerListFragment"
+        android:name="com.lpms.ui.customers.CustomerListFragment"
+        android:label="@string/nav_customers">
+
+        <action
+            android:id="@+id/action_customerList_to_customerDetail"
+            app:destination="@id/customerDetailFragment" />
+        <action
+            android:id="@+id/action_customerList_to_customerForm"
+            app:destination="@id/customerFormFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/customerDetailFragment"
+        android:name="com.lpms.ui.customers.CustomerDetailFragment"
+        android:label="@string/customer_detail_title">
+
+        <argument
+            android:name="customerId"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/customerFormFragment"
+        android:name="com.lpms.ui.customers.CustomerFormFragment"
+        android:label="@string/customer_add_title">
+
+        <argument
+            android:name="customerId"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </fragment>
+
+    <!--
+      Sales history. Reachable from the More hub, and the destination the POS sends a
+      cashier to after a confirmation it could not verify.
+    -->
+    <fragment
+        android:id="@+id/salesListFragment"
+        android:name="com.lpms.ui.sales.SalesListFragment"
+        android:label="@string/sales_title">
+
+        <argument
+            android:name="highlightSaleId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_salesList_to_saleDetail"
+            app:destination="@id/saleDetailFragment" />
+    </fragment>
+
     <action
         android:id="@+id/action_global_login"
         app:destination="@id/loginFragment"

@@ -77,21 +77,45 @@ public final class MoreFragment extends Fragment {
                 () -> NavHostFragment.findNavController(this)
                         .navigate(R.id.drugListFragment));
 
+        addRow(R.drawable.ic_nav_sales, R.string.sales_title,
+                () -> NavHostFragment.findNavController(this)
+                        .navigate(R.id.salesListFragment));
+
+        addRow(R.drawable.ic_nav_profile, R.string.nav_customers,
+                () -> NavHostFragment.findNavController(this)
+                        .navigate(R.id.customerListFragment));
+
         if (role.canManageCatalog()) {
             addRow(R.drawable.ic_audit, R.string.nav_categories,
                     () -> NavHostFragment.findNavController(this)
                             .navigate(R.id.categoriesFragment));
+
+            addRow(R.drawable.ic_nav_inventory, R.string.nav_inventory,
+                    () -> NavHostFragment.findNavController(this)
+                            .navigate(R.id.inventoryFragment));
+        }
+
+        if (role.canViewReports()) {
+            addRow(R.drawable.ic_reports, R.string.nav_reports,
+                    () -> NavHostFragment.findNavController(this)
+                            .navigate(R.id.reportsFragment));
+        }
+
+        if (role.canAdminister()) {
+            addRow(R.drawable.ic_users, R.string.nav_users,
+                    () -> NavHostFragment.findNavController(this)
+                            .navigate(R.id.userListFragment));
+            addRow(R.drawable.ic_audit, R.string.nav_audit_log,
+                    () -> NavHostFragment.findNavController(this)
+                            .navigate(R.id.auditListFragment));
+            addRow(R.drawable.ic_settings, R.string.nav_settings,
+                    () -> NavHostFragment.findNavController(this)
+                            .navigate(R.id.settingsFragment));
         }
 
         addRow(R.drawable.ic_nav_profile, R.string.more_change_password,
                 () -> NavHostFragment.findNavController(this)
                         .navigate(R.id.changePasswordFragment));
-
-        // Reports / Users / Audit / Settings rows are added here as their destinations
-        // land in the nav graph, each behind its role gate:
-        //   role.canViewReports()  → Reports
-        //   role.canAdminister()   → Users, Audit log, Settings
-        // Listing an entry before its destination exists would dead-end the user.
 
         binding.signOut.setOnClickListener(v -> confirmSignOut());
     }

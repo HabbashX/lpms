@@ -463,7 +463,11 @@ public final class DrugListFragment extends Fragment implements DrugsAdapter.Lis
     }
 
     /** Navigation argument key shared by the detail and form destinations. */
-    static final String ARG_DRUG_ID = "drugId";
+    /**
+     * Navigation argument for a drug id, shared with the screens that open a single drug.
+     * Matches the {@code drugId} argument in the nav graph; 0 means none.
+     */
+    public static final String ARG_DRUG_ID = "drugId";
 
     /** Rows from the end that trigger the next page request. */
     private static final int PREFETCH_DISTANCE = 6;
