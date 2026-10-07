@@ -72,4 +72,16 @@ public final class UpdateCustomerRequest {
         return new UpdateCustomerRequest(customer.getName(), customer.getPhone(),
                 customer.getAddress(), customer.getNotes(), Boolean.FALSE);
     }
+
+    /**
+     * Reactivate: same payload with {@code active=true}.
+     *
+     * <p>All the other fields are resent, because this is a PUT - the server replaces the
+     * record rather than patching it, so sending only the flag would blank the details.</p>
+     */
+    @NonNull
+    public static UpdateCustomerRequest activate(@NonNull CustomerResponse customer) {
+        return new UpdateCustomerRequest(customer.getName(), customer.getPhone(),
+                customer.getAddress(), customer.getNotes(), Boolean.TRUE);
+    }
 }

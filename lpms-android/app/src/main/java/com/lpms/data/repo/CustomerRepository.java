@@ -7,9 +7,14 @@ import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
 import com.lpms.core.error.ApiErrorMapper;
 import com.lpms.data.api.CustomerApi;
+import com.lpms.data.dto.CreateAdjustmentRequest;
 import com.lpms.data.dto.CreateCustomerRequest;
+import com.lpms.data.dto.CreatePaymentRequest;
+import com.lpms.data.dto.CustomerAccountResponse;
 import com.lpms.data.dto.CustomerResponse;
 import com.lpms.data.dto.PageResponse;
+import com.lpms.data.dto.PaymentResponse;
+import com.lpms.data.dto.TransactionResponse;
 import com.lpms.data.dto.UpdateCustomerRequest;
 
 import javax.inject.Inject;
@@ -53,6 +58,40 @@ public final class CustomerRepository {
     @NonNull
     public Single<CustomerResponse> get(long id) {
         return customerApi.get(id)
+                .onErrorResumeNext(error -> Single.error(
+                        new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
+                .subscribeOn(Schedulers.io());
+    }
+
+    /**
+     * Statement: totals plus a page of transactions.
+     *
+     * <p>The transactions are paged <em>inside</em> this response rather than through a
+     * separate endpoint, so the screen re-reads the whole account with a larger
+     * {@code transactionPage} instead of calling an endpoint that does not exist.</p>
+     */
+    @NonNull
+    public Single<CustomerAccountResponse> account(long id, int transactionPage,
+                                                  int transactionSize) {
+        return customerApi.account(id, transactionPage, transactionSize)
+                .onErrorResumeNext(error -> Single.error(
+                        new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
+                .subscribeOn(Schedulers.io());
+    }
+
+    /** Records a payment against the debt. Never retried automatically. */
+    @NonNull
+    public Single<PaymentResponse> recordPayment(long id, @NonNull CreatePaymentRequest request) {
+        return customerApi.recordPayment(id, request)
+                .onErrorResumeNext(error -> Single.error(
+                        new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
+                .subscribeOn(Schedulers.io());
+    }
+
+    /** Manual correction. {@code direction} is DEBIT or CREDIT; both are audited. */
+    @NonNull
+    public Single<TransactionResponse> adjust(long id, @NonNull CreateAdjustmentRequest request) {
+        return customerApi.adjust(id, request)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
                 .subscribeOn(Schedulers.io());
@@ -114,6 +153,26 @@ public final class CustomerRepository {
         @Nullable
         public String getSort() {
             return sort;
+        }
+
+        @NonNull
+        public Filter withSearch(@Nullable String value) {
+            return new Filter(value, active, sort);
+        }
+
+        @NonNull
+        public Filter withActive(@Nullable Boolean value) {
+            return new Filter(search, value, sort);
+        }
+
+        @NonNull
+        public Filter withSort(@Nullable String value) {
+            return new Filter(search, active, value);
+        }
+
+        /** True when anything narrows the list, so the UI can show its "clear" action. */
+        public boolean hasAnyFilter() {
+            return search != null || active != null;
         }
     }
 
