@@ -154,6 +154,17 @@ public final class InventoryRepository {
             return new Filter(null, null, null, null, null, "receivedAt,desc");
         }
 
+        /**
+         * Batches matching a free-text search, newest received first.
+         *
+         * <p>{@code search} matches the drug name or the batch number; the expiry filters
+         * stay null so this is not narrowed to expired or expiring stock.</p>
+         */
+        @NonNull
+        public static Filter batches(@Nullable String search) {
+            return new Filter(null, null, search, null, null, "receivedAt,desc");
+        }
+
         @Nullable
         public Long getDrugId() {
             return drugId;
@@ -237,6 +248,41 @@ public final class InventoryRepository {
         @Override
         protected Call<PageResponse<ExpiringBatchResponse>> callForPage(int page, int size) {
             return inventoryApi.expiring(days, expired, search, page, size);
+        }
+    }
+
+    /**
+     * Whole-pharmacy stock valuation, one row per drug.
+     *
+     * <p>Distinct from {@link #valuation(long)}, which resolves a single drug: this pages
+     * the {@code GET /inventory/valuation} report so the pharmacy can see the total value of
+     * everything it holds.</p>
+     */
+    @NonNull
+    public PageablePagingSource<DrugValuationResponse> valuationPaging(@Nullable String search,
+                                                                       @Nullable String sort,
+                                                                       @NonNull
+                                                                       ApiErrorMapper errorMapper) {
+        return new ValuationPagingSource(search, sort, errorMapper);
+    }
+
+    private final class ValuationPagingSource
+            extends PageablePagingSource<DrugValuationResponse> {
+
+        private final String search;
+        private final String sort;
+
+        ValuationPagingSource(@Nullable String search, @Nullable String sort,
+                              @NonNull ApiErrorMapper mapper) {
+            super(mapper, DEFAULT_PAGE_SIZE);
+            this.search = search;
+            this.sort = sort;
+        }
+
+        @NonNull
+        @Override
+        protected Call<PageResponse<DrugValuationResponse>> callForPage(int page, int size) {
+            return inventoryApi.valuation(search, page, size, sort);
         }
     }
 }
