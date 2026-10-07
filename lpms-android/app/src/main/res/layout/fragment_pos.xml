@@ -242,18 +242,36 @@
                 tools:text="Amoxicillin has no selling price — enter one"
                 tools:visibility="visible" />
 
-            <TextView
+            <!--
+              Unconfirmed sale. POST /sales has no idempotency key, so after a dropped
+              connection the only safe move is to look the sale up before trying again -
+              which is why this block carries a button and not just advice.
+            -->
+            <LinearLayout
                 android:id="@+id/uncertain_warning"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:background="?attr/colorErrorContainer"
-                android:padding="10dp"
-                android:text="@string/pos_submit_uncertain"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnErrorContainer"
+                android:orientation="vertical"
                 android:visibility="gone"
-                tools:visibility="visible" />
+                tools:visibility="visible">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/colorErrorContainer"
+                    android:padding="10dp"
+                    android:text="@string/pos_submit_uncertain"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnErrorContainer" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/uncertain_view_sales"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pos_view_sales_history" />
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/confirm_sale"

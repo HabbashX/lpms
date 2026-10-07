@@ -208,9 +208,14 @@ public final class PosFragment extends Fragment implements CartAdapter.Listener 
 
         viewModel.summary().observe(getViewLifecycleOwner(), this::renderSummary);
         viewModel.submitting().observe(getViewLifecycleOwner(), this::renderSubmitState);
-        viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain ->
-                binding.uncertainWarning.setVisibility(
-                        Boolean.TRUE.equals(uncertain) ? View.VISIBLE : View.GONE));
+viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
+            boolean shown = Boolean.TRUE.equals(uncertain);
+            binding.uncertainWarning.setVisibility(shown ? View.VISIBLE : View.GONE);
+            // The warning tells the cashier to check Sales history; this is that button.
+            // POST /sales has no idempotency key, so this is the only safe way to find out
+            // whether the sale landed before trying again.
+            binding.uncertainViewSales.setOnClickListener(v -> openSalesHistory());
+        });
 
         viewModel.searchResults().observe(getViewLifecycleOwner(), results -> {
             searchAdapter.submitList(results);
@@ -320,6 +325,11 @@ public final class PosFragment extends Fragment implements CartAdapter.Listener 
         Bundle args = new Bundle();
         args.putLong(SaleDetailFragment.ARG_SALE_ID, sale.getId());
         NavHostFragment.findNavController(this).navigate(R.id.action_pos_to_saleDetail, args);
+    }
+
+    /** Opens the sales history, which is where an unconfirmed sale can be found. */
+    private void openSalesHistory() {
+        NavHostFragment.findNavController(this).navigate(R.id.salesListFragment);
     }
 
     private void showCustomerPicker() {
