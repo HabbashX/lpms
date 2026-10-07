@@ -180,13 +180,16 @@
                     android:text="@string/pricing_section_batches"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/batches_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:overScrollMode="never"
-                    tools:itemCount="3"
-                    tools:listitem="@layout/item_batch" />
+<!--
+      Batch rows are inflated and added directly, like summary_rows and the receipt rows.
+      A RecyclerView cannot be used here: adding views by hand gives it children with no
+      ViewHolder, and setLayoutManager would then crash trying to recycle them.
+    -->
+<LinearLayout
+    android:id="@+id/batches_list"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

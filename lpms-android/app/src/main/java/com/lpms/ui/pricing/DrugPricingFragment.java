@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.lpms.R;
@@ -200,16 +199,22 @@ public final class DrugPricingFragment extends Fragment {
         }
     }
 
+    /**
+     * Renders the per-batch breakdown.
+     *
+     * <p>The container is a LinearLayout, not a RecyclerView: these rows are inflated and
+     * added directly, the same as {@code summaryRows}. It must stay that way - handing a
+     * RecyclerView manually added children makes {@code setLayoutManager} crash while
+     * recycling them, because they have no ViewHolder.</p>
+     */
     private void bindBatches(@NonNull List<PricingBatchResponse> batches) {
-        binding.batchesList.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.batchesList.setNestedScrollingEnabled(false);
+        binding.batchesList.removeAllViews();
         if (batches.isEmpty()) {
             binding.batchesList.setVisibility(View.GONE);
             return;
         }
         binding.batchesList.setVisibility(View.VISIBLE);
         LayoutInflater inflater = LayoutInflater.from(requireContext());
-        binding.batchesList.removeAllViews();
         for (PricingBatchResponse batch : batches) {
             ItemBatchBinding row = ItemBatchBinding.inflate(inflater, binding.batchesList, false);
             String label = batch.getBatchNumber() == null || batch.getBatchNumber().trim().isEmpty()
