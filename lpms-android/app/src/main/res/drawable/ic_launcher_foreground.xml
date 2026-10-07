@@ -1,12 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground: the capsule mark from ic_pharmacy_capsule.xml, scaled into
+  the safe zone.
+
+  An adaptive icon is masked to roughly the central 66x66 of a 108x108 canvas, and a
+  launcher can crop to a circle. The artwork is about 160 units across once rotated, so
+  it is scaled to 0.40 - about 64 units - and centred: 80 * 0.40 + 22 = 54. Without that
+  scaling the capsule ends would be cut off by the mask.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group android:scaleX="0.5" android:scaleY="0.5" android:translateX="27" android:translateY="27">
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M54,20 L60,42 L82,42 L64,55 L71,78 L54,64 L37,78 L44,55 L26,42 L48,42 Z" />
+
+    <group
+        android:scaleX="0.40"
+        android:scaleY="0.40"
+        android:translateX="22"
+        android:translateY="22">
+
+        <group
+            android:pivotX="80"
+            android:pivotY="80"
+            android:rotation="40">
+
+            <group>
+                <clip-path
+                    android:pathData="M38,48 A42,42 0 0 1 122,48 L122,112 A42,42 0 0 1 38,112 Z" />
+                <path
+                    android:fillColor="#7EE0B8"
+                    android:pathData="M38,6 h84 v74 h-84 z" />
+                <path
+                    android:fillColor="#0B6B5D"
+                    android:pathData="M38,80 h84 v74 h-84 z" />
+            </group>
+
+            <path
+                android:fillColor="#F3FAF7"
+                android:pathData="M38,78 h84 v4 h-84 z" />
+
+            <path
+                android:pathData="M80,98 L80,132 M63,115 L97,115"
+                android:strokeColor="#F3FAF7"
+                android:strokeWidth="9"
+                android:strokeLineCap="round" />
+
+            <path
+                android:fillColor="#F3FAF7"
+                android:fillAlpha="0.85"
+                android:pathData="M91,36 a7,7 0 1 0 14,0 a7,7 0 1 0 -14,0 Z" />
+        </group>
     </group>
 </vector>

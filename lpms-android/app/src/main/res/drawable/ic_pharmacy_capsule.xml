@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Larv Pharmacy mark: a capsule tilted 40 degrees, mint over dark teal, split by a pale
+  band, with a medical cross and a highlight.
+
+  Converted from the supplied SVG (viewBox 0 0 160 160). Two differences are forced by
+  VectorDrawable:
+
+  - SVG rotate(40 80 80) becomes a group with pivotX/pivotY 80 and rotation 40.
+  - The SVG clipPath becomes an inline <clip-path> on the group holding the two fills.
+    The capsule is a stadium, so it is one path: straight sides between two semicircular
+    caps of radius 42 centred at (80,48) and (80,112).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+
+    <group
+        android:pivotX="80"
+        android:pivotY="80"
+        android:rotation="40">
+
+        <!-- Capsule body: top half mint, bottom half teal, clipped to the capsule. -->
+        <group>
+            <clip-path
+                android:pathData="M38,48 A42,42 0 0 1 122,48 L122,112 A42,42 0 0 1 38,112 Z" />
+            <path
+                android:fillColor="#7EE0B8"
+                android:pathData="M38,6 h84 v74 h-84 z" />
+            <path
+                android:fillColor="#0B6B5D"
+                android:pathData="M38,80 h84 v74 h-84 z" />
+        </group>
+
+        <!-- Pale divider band across the middle. -->
+        <path
+            android:fillColor="#F3FAF7"
+            android:pathData="M38,78 h84 v4 h-84 z" />
+
+        <!-- Medical cross, round-capped so it matches the source stroke joins. -->
+        <path
+            android:pathData="M80,98 L80,132 M63,115 L97,115"
+            android:strokeColor="#F3FAF7"
+            android:strokeWidth="9"
+            android:strokeLineCap="round" />
+
+        <!-- Highlight. -->
+        <path
+            android:fillColor="#F3FAF7"
+            android:fillAlpha="0.85"
+            android:pathData="M91,36 a7,7 0 1 0 14,0 a7,7 0 1 0 -14,0 Z" />
+    </group>
+</vector>

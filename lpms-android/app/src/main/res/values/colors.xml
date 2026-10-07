@@ -11,7 +11,13 @@
     <color name="lpms_error">#FFBA1A1A</color>
     <color name="lpms_on_error">#FFFFFFFF</color>
 
-    <color name="stock_ok">#FF2E7D32</color>
+<color name="stock_ok">#FF2E7D32</color>
     <color name="stock_low">#FFEF6C00</color>
     <color name="stock_critical">#FFC62828</color>
+
+    <!--
+      Launcher background. Deliberately not lpms_primary: that colour is within a hair of
+      the capsule mark's own dark teal, so the lower half of the mark would vanish into it.
+    -->
+    <color name="lpms_launcher_background">#FFF3FAF7</color>
 </resources>
