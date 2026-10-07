@@ -16,7 +16,7 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
- * Accumulates pages from a {@link PageablePagingSource} into one growing list.
+ * Accumulates pages from a {@link PagedSource} into one growing list.
  *
  * <p>Small, explicit paging engine used by the list screens. It exists because the
  * Java/RxJava3 combination has no usable {@code Pager}: {@code paging-rxjava3} ships
@@ -29,13 +29,13 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
  */
 public final class PagedAccumulator<T> {
 
-    private final PageablePagingSource<T> source;
+    private final PagedSource<T> source;
 
     private final List<T> items = new ArrayList<>();
     private Integer nextKey = 0;
     private boolean endReached;
 
-    public PagedAccumulator(@NonNull PageablePagingSource<T> source) {
+    public PagedAccumulator(@NonNull PagedSource<T> source) {
         this.source = source;
     }
 

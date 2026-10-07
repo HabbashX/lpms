@@ -27,7 +27,8 @@ import retrofit2.Call;
  *
  * @param <T> row type
  */
-public abstract class PageablePagingSource<T> extends RxPagingSource<Integer, T> {
+public abstract class PageablePagingSource<T> extends RxPagingSource<Integer, T>
+        implements PagedSource<T> {
 
     /** Matches the backend default; the server clamps anything above 100. */
     public static final int DEFAULT_PAGE_SIZE = 20;
@@ -41,6 +42,7 @@ public abstract class PageablePagingSource<T> extends RxPagingSource<Integer, T>
         this.pageSize = pageSize > 0 ? Math.min(pageSize, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
     }
 
+        @Override
     public int getPageSize() {
         return pageSize;
     }
