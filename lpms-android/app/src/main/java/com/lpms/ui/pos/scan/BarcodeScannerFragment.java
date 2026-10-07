@@ -34,11 +34,14 @@ import java.util.concurrent.Executors;
 import dagger.hilt.android.AndroidEntryPoint;
 
 /**
- * CameraX + ML Kit barcode scanner for the POS.
+ * CameraX + ML Kit barcode scanner, used by the POS and by the drug form's barcode field.
  *
- * <p>The first decoded value is delivered through the fragment result API and the
- * scanner closes itself, so a single scan can never add the same item twice. Analysis
- * runs on a background executor and everything is released in {@code onDestroyView}.</p>
+ * <p>The first decoded value is delivered through the fragment result API and the scanner
+ * closes itself, so a single scan can never add the same item twice. Analysis runs on a
+ * background executor and everything is released in {@code onDestroyView}.</p>
+ *
+ * <p>This is a navigation destination: leaving it, by any route, returns to the screen that
+ * opened it. It must never call {@code Activity.finish()}, which would close the app.</p>
  */
 @AndroidEntryPoint
 public final class BarcodeScannerFragment extends Fragment {
@@ -54,7 +57,9 @@ public final class BarcodeScannerFragment extends Fragment {
                         if (Boolean.TRUE.equals(granted)) {
                             startCamera();
                         } else {
-                            requireActivity().finish();
+                            // Leaving is the only option, but it must leave the scanner
+                            // and not the whole app.
+                            com.lpms.ui.pos.scan.BarcodeScanner.close(this);
                         }
                     });
 
@@ -75,7 +80,8 @@ public final class BarcodeScannerFragment extends Fragment {
                 .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
                 .build());
 
-        binding.toolbar.setNavigationOnClickListener(v -> requireActivity().finish());
+        binding.toolbar.setNavigationOnClickListener(
+                v -> com.lpms.ui.pos.scan.BarcodeScanner.close(this));
 
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -136,10 +142,8 @@ public final class BarcodeScannerFragment extends Fragment {
             return;
         }
         resultDelivered = true;
+        // deliver() reports the code and pops this destination in one step.
         com.lpms.ui.pos.scan.BarcodeScanner.deliver(this, value.trim());
-        if (getActivity() != null) {
-            getActivity().finish();
-        }
     }
 
     @Override

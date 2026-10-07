@@ -264,10 +264,4 @@
                 android:text="@string/pos_confirm_sale" />
         </LinearLayout>
     </LinearLayout>
-    <!-- Scanner overlay host: BarcodeScannerFragment is added here. -->
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/pos_scanner_host"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

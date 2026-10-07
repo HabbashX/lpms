@@ -130,8 +130,7 @@
         android:name="com.lpms.ui.inventory.ReceiveStockFragment"
         android:label="@string/stock_receive_title" />
 
-    <!-- Point of sale. Holds the scanner host so the camera fragment can be added
-         over it; confirmation lands on the receipt screen. -->
+    <!-- Point of sale. Confirmation lands on the receipt screen. -->
     <fragment
         android:id="@+id/posFragment"
         android:name="com.lpms.ui.pos.PosFragment"
@@ -143,6 +142,17 @@
             app:popUpTo="@id/posFragment"
             app:popUpToInclusive="true" />
     </fragment>
+
+    <!--
+      Barcode scanner, reachable from both the POS and the drug form. It is a navigation
+      destination rather than a fragment dropped into a container view, so closing it -
+      by back gesture, toolbar or a successful scan - returns to whichever screen opened
+      it, and it can never be left stranded.
+    -->
+    <fragment
+        android:id="@+id/barcodeScannerFragment"
+        android:name="com.lpms.ui.pos.scan.BarcodeScannerFragment"
+        android:label="@string/pos_scan_barcode" />
 
     <fragment
         android:id="@+id/saleDetailFragment"
