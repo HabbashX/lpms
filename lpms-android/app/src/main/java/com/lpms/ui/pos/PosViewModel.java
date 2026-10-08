@@ -223,8 +223,26 @@ public final class PosViewModel extends ViewModel {
             // Changing the discount or payment method invalidates a typed "amount paid",
             // so re-default it to the new total.
             defaultAmountPaidToTotal();
+        } else {
+            clampAmountPaidToTotal();
         }
         recompute();
+    }
+
+    /**
+     * Keeps a prefilled paid amount valid after the total moves under it.
+     *
+     * <p>The paid field is prefilled with the total, so editing a line price can leave it
+     * above the new total - which the server rejects outright. Following the total is what
+     * a cashier means anyway: they are not deliberately overpaying.</p>
+     */
+    private void clampAmountPaidToTotal() {
+        Cart current = cart.getValue();
+        BigDecimal total = current.totals(BigDecimal.ZERO).getTotal();
+        BigDecimal paid = amountPaid.getValue();
+        if (paid != null && paid.compareTo(total) > 0) {
+            amountPaid.setValue(total);
+        }
     }
 
     /** Casher convenience: prefill the paid field with the exact total. */

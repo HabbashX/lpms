@@ -230,6 +230,13 @@ public final class Cart {
         if (amountPaid.signum() < 0) {
             problems.add("amount paid cannot be negative");
         }
+        // The server rejects amountPaid above the sale total, so it is caught here rather
+        // than as a failed confirmation. This is easy to hit: the paid field is prefilled
+        // with the total, so lowering a line price after typing it leaves the old, larger
+        // figure in place.
+        if (amountPaid.compareTo(totals.getTotal()) > 0) {
+            problems.add("amount paid is more than the sale total");
+        }
         return problems;
     }
 
