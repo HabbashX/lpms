@@ -13,6 +13,7 @@ import com.lpms.data.dto.CustomerResponse;
 import com.lpms.data.dto.DrugResponse;
 import com.lpms.data.dto.PaymentMethod;
 import com.lpms.data.dto.SaleResponse;
+import com.lpms.data.dto.TransferDetails;
 import com.lpms.data.repo.CustomerRepository;
 import com.lpms.data.repo.DrugRepository;
 import com.lpms.data.repo.SalesRepository;
@@ -183,7 +184,11 @@ public final class PosViewModel extends ViewModel {
     }
 
     public void setPaymentMethod(@NonNull PaymentMethod method) {
-        Cart updated = cart.getValue().withPaymentMethod(method);
+        Cart current = cart.getValue();
+        // Leaving BANK_TRANSFER drops the destination, since the server rejects transfer
+        // details on any other payment method.
+        Cart updated = current.withTransfer(method,
+                method == PaymentMethod.BANK_TRANSFER ? current.getTransfer() : null);
         // CREDIT is the only method that can leave debt, so it starts at zero paid.
         if (method == PaymentMethod.CREDIT) {
             amountPaid.setValue(BigDecimal.ZERO);
@@ -191,6 +196,12 @@ public final class PosViewModel extends ViewModel {
             return;
         }
         publish(updated, true);
+    }
+
+    /** Stores the bank transfer destination collected by the POS dialog. */
+    public void setTransfer(@Nullable TransferDetails details) {
+        Cart current = cart.getValue();
+        publish(current.withTransfer(PaymentMethod.BANK_TRANSFER, details), true);
     }
 
     public void setCustomer(@Nullable CustomerResponse customer) {
@@ -364,7 +375,8 @@ public final class PosViewModel extends ViewModel {
                         cartSnapshot.getPaymentMethod(),
                         items,
                         cartSnapshot.getDiscount(),
-                        paid)
+                        paid,
+                        cartSnapshot.getTransfer())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         sale -> {

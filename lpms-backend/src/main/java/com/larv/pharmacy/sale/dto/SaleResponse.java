@@ -1,6 +1,7 @@
 package com.larv.pharmacy.sale.dto;
 
 import com.larv.pharmacy.common.domain.PaymentMethod;
+import com.larv.pharmacy.common.domain.TransferProvider;
 import com.larv.pharmacy.sale.SaleStatus;
 
 import java.math.BigDecimal;
@@ -22,6 +23,18 @@ public record SaleResponse(
         BigDecimal amountDue,
         BigDecimal cost,
         BigDecimal profit,
-        BigDecimal refundedTotal,
-        List<SaleItemResponse> items) {
+  BigDecimal refundedTotal,
+  List<SaleItemResponse> items,
+  TransferProvider transferProvider,
+  String transferAccountName,
+  String transferAccountIdentifier) {
+
+  /** The complete bank transfer destination, or null for any non-transfer payment. */
+  public CreateSaleRequest.TransferDetails transfer() {
+    if (transferProvider == null) {
+      return null;
+    }
+    return new CreateSaleRequest.TransferDetails(
+      transferProvider, transferAccountName, transferAccountIdentifier);
+  }
 }

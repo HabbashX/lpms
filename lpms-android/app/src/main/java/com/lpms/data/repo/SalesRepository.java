@@ -14,6 +14,7 @@ import com.lpms.data.dto.PageResponse;
 import com.lpms.data.dto.PaymentMethod;
 import com.lpms.data.dto.RefundResponse;
 import com.lpms.data.dto.SaleResponse;
+import com.lpms.data.dto.TransferDetails;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -211,8 +212,10 @@ public final class SalesRepository {
                                        @NonNull PaymentMethod paymentMethod,
                                        @NonNull List<CreateSaleItemRequest> items,
                                        @NonNull BigDecimal discount,
-                                       @NonNull BigDecimal amountPaid) {
-        return salesApi.create(requestFor(customerId, paymentMethod, items, discount, amountPaid))
+                                       @NonNull BigDecimal amountPaid,
+                                       @Nullable TransferDetails transfer) {
+        return salesApi.create(requestFor(customerId, paymentMethod, items, discount, amountPaid,
+                transfer))
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
                 .subscribeOn(Schedulers.io());
@@ -244,8 +247,22 @@ public final class SalesRepository {
                                                @NonNull PaymentMethod paymentMethod,
                                                @NonNull List<CreateSaleItemRequest> items,
                                                @NonNull BigDecimal discount,
-                                               @NonNull BigDecimal amountPaid) {
+                                               @NonNull BigDecimal amountPaid,
+                                               @Nullable TransferDetails transfer) {
+        // Only a bank transfer may carry a destination; sending it on any other method is
+        // rejected by the server, so it is dropped here rather than relying on the caller.
+        TransferDetails sent = paymentMethod == PaymentMethod.BANK_TRANSFER ? transfer : null;
         return new CreateSaleRequest(customerId, paymentMethod.wireValue(), items, discount,
-                amountPaid);
+                amountPaid, sent);
+    }
+
+    /** Overload for payments that can never carry transfer details. */
+    @NonNull
+    public static CreateSaleRequest requestFor(@Nullable Long customerId,
+                                               @NonNull PaymentMethod paymentMethod,
+                                               @NonNull List<CreateSaleItemRequest> items,
+                                               @NonNull BigDecimal discount,
+                                               @NonNull BigDecimal amountPaid) {
+        return requestFor(customerId, paymentMethod, items, discount, amountPaid, null);
     }
 }

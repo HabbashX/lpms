@@ -30,6 +30,7 @@ import com.lpms.core.util.Money;
 import com.lpms.data.dto.SaleItemResponse;
 import com.lpms.data.dto.SaleResponse;
 import com.lpms.data.dto.SaleStatus;
+import com.lpms.data.dto.TransferProvider;
 import com.lpms.databinding.FragmentSaleDetailBinding;
 import com.lpms.databinding.ItemDetailRowBinding;
 
@@ -140,6 +141,19 @@ public final class SaleDetailFragment extends Fragment {
         // programmatically built sections must be cleared before they are refilled.
         binding.totals.removeAllViews();
         binding.profitRows.removeAllViews();
+        // The transfer destination belongs with the items: it identifies where this
+        // particular payment went, which is what a cashier needs when reconciling.
+        if (sale.hasTransfer()) {
+            TransferProvider provider = TransferProvider.fromWire(sale.getTransferProvider());
+            String providerName = provider == null
+                    ? sale.getTransferProvider() : provider.displayName();
+            String identifierLabel = provider == null
+                    ? getString(R.string.pos_transfer_identifier_default)
+                    : provider.identifierLabel();
+            addRow(getString(R.string.sale_transfer_to, providerName),
+                    sale.getTransferAccountName());
+            addRow(identifierLabel, sale.getTransferAccountIdentifier());
+        }
         for (SaleItemResponse item : sale.getItems()) {
             addRow(item.getDrugName(), item.getQuantity() + " × "
                     + Money.format(item.getUnitSellingPrice(), currency) + "  =  "
@@ -249,6 +263,18 @@ public final class SaleDetailFragment extends Fragment {
                 current.paymentMethod().name())).append('\n');
         if (current.getCustomerName() != null) {
             sb.append(getString(R.string.sale_customer, current.getCustomerName())).append('\n');
+        }
+        // Where the transfer went, so the receipt is enough to reconcile against the bank.
+        if (current.hasTransfer()) {
+            TransferProvider provider =
+                    TransferProvider.fromWire(current.getTransferProvider());
+            String providerName = provider == null
+                    ? current.getTransferProvider() : provider.displayName();
+            sb.append(getString(R.string.sale_transfer_to, providerName)).append('\n');
+            sb.append(getString(R.string.sale_transfer_account,
+                    current.getTransferAccountName())).append('\n');
+            sb.append(getString(R.string.sale_transfer_identifier,
+                    current.getTransferAccountIdentifier())).append('\n');
         }
         sb.append('\n');
         for (SaleItemResponse item : current.getItems()) {

@@ -2,6 +2,7 @@ package com.larv.pharmacy.sale;
 
 import com.larv.pharmacy.common.domain.ImmutableEntity;
 import com.larv.pharmacy.common.domain.PaymentMethod;
+import com.larv.pharmacy.common.domain.TransferProvider;
 import com.larv.pharmacy.customer.Customer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -53,6 +54,13 @@ public class Sale extends ImmutableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, length = 20)
     private PaymentMethod paymentMethod;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transfer_provider", length = 30)
+    private TransferProvider transferProvider;
+    @Column(name = "transfer_account_name", length = 120)
+    private String transferAccountName;
+    @Column(name = "transfer_account_identifier", length = 120)
+    private String transferAccountIdentifier;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal subtotal = BigDecimal.ZERO;
@@ -120,6 +128,31 @@ public class Sale extends ImmutableEntity {
 
     public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    /**
+     * Records where a {@code BANK_TRANSFER} payment went. All three fields move together:
+     * either a sale has a complete destination or none at all, which is what the
+     * {@code ck_sales_transfer_complete} constraint enforces in the database.
+     */
+    public void setTransferDetails(TransferProvider provider,
+                                   String accountName,
+                                   String accountIdentifier) {
+        this.transferProvider = provider;
+        this.transferAccountName = accountName;
+        this.transferAccountIdentifier = accountIdentifier;
+    }
+
+    public TransferProvider getTransferProvider() {
+        return transferProvider;
+    }
+
+    public String getTransferAccountName() {
+        return transferAccountName;
+    }
+
+    public String getTransferAccountIdentifier() {
+        return transferAccountIdentifier;
     }
 
     public BigDecimal getSubtotal() {

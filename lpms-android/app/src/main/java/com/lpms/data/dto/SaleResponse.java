@@ -69,6 +69,16 @@ public final class SaleResponse {
     @SerializedName("items")
     private final List<SaleItemResponse> items;
 
+    /** Bank transfer destination; null unless the sale was paid by BANK_TRANSFER. */
+    @SerializedName("transferProvider")
+    private final String transferProvider;
+
+    @SerializedName("transferAccountName")
+    private final String transferAccountName;
+
+    @SerializedName("transferAccountIdentifier")
+    private final String transferAccountIdentifier;
+
     public SaleResponse(@Nullable Long id,
                         @Nullable Instant createdAt,
                         @Nullable Long customerId,
@@ -85,6 +95,30 @@ public final class SaleResponse {
                         @Nullable BigDecimal profit,
                         @Nullable BigDecimal refundedTotal,
                         @Nullable List<SaleItemResponse> items) {
+        this(id, createdAt, customerId, customerName, createdBy, paymentMethod, status, subtotal,
+                discount, total, amountPaid, amountDue, cost, profit, refundedTotal, items,
+                null, null, null);
+    }
+
+    public SaleResponse(@Nullable Long id,
+                        @Nullable Instant createdAt,
+                        @Nullable Long customerId,
+                        @Nullable String customerName,
+                        @Nullable String createdBy,
+                        @Nullable String paymentMethod,
+                        @Nullable String status,
+                        @Nullable BigDecimal subtotal,
+                        @Nullable BigDecimal discount,
+                        @Nullable BigDecimal total,
+                        @Nullable BigDecimal amountPaid,
+                        @Nullable BigDecimal amountDue,
+                        @Nullable BigDecimal cost,
+                        @Nullable BigDecimal profit,
+                        @Nullable BigDecimal refundedTotal,
+                        @Nullable List<SaleItemResponse> items,
+                        @Nullable String transferProvider,
+                        @Nullable String transferAccountName,
+                        @Nullable String transferAccountIdentifier) {
         this.id = id;
         this.createdAt = createdAt;
         this.customerId = customerId;
@@ -101,6 +135,9 @@ public final class SaleResponse {
         this.profit = profit;
         this.refundedTotal = refundedTotal;
         this.items = items == null ? new ArrayList<>() : items;
+        this.transferProvider = transferProvider;
+        this.transferAccountName = transferAccountName;
+        this.transferAccountIdentifier = transferAccountIdentifier;
     }
 
     @Nullable
@@ -199,5 +236,27 @@ public final class SaleResponse {
     public boolean hasRefunds() {
         BigDecimal refunded = getRefundedTotal();
         return refunded != null && refunded.signum() > 0;
+    }
+
+    /** True when this sale recorded where a bank transfer payment went. */
+    public boolean hasTransfer() {
+        return transferProvider != null
+                && transferAccountName != null
+                && transferAccountIdentifier != null;
+    }
+
+    @Nullable
+    public String getTransferProvider() {
+        return transferProvider;
+    }
+
+    @Nullable
+    public String getTransferAccountName() {
+        return transferAccountName;
+    }
+
+    @Nullable
+    public String getTransferAccountIdentifier() {
+        return transferAccountIdentifier;
     }
 }

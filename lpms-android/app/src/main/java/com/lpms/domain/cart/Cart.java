@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.lpms.data.dto.PaymentMethod;
+import com.lpms.data.dto.TransferDetails;
 import com.lpms.data.dto.DrugResponse;
 
 import java.math.BigDecimal;
@@ -25,22 +26,25 @@ public final class Cart {
     private final PaymentMethod paymentMethod;
     private final Long customerId;
     private final String customerName;
+    private final TransferDetails transfer;
 
     private Cart(@NonNull List<CartLine> lines,
                  @NonNull BigDecimal discount,
                  @NonNull PaymentMethod paymentMethod,
                  @Nullable Long customerId,
-                 @Nullable String customerName) {
+                 @Nullable String customerName,
+                 @Nullable TransferDetails transfer) {
         this.lines = Collections.unmodifiableList(new ArrayList<>(lines));
         this.discount = discount;
         this.paymentMethod = paymentMethod;
         this.customerId = customerId;
         this.customerName = customerName;
+        this.transfer = transfer;
     }
 
     @NonNull
     public static Cart empty() {
-        return new Cart(new ArrayList<>(), BigDecimal.ZERO, PaymentMethod.CASH, null, null);
+        return new Cart(new ArrayList<>(), BigDecimal.ZERO, PaymentMethod.CASH, null, null, null);
     }
 
     @NonNull
@@ -66,6 +70,25 @@ public final class Cart {
     @Nullable
     public String getCustomerName() {
         return customerName;
+    }
+
+    /** Where a {@code BANK_TRANSFER} payment is sent; null for every other method. */
+    @Nullable
+    public TransferDetails getTransfer() {
+        return transfer;
+    }
+
+    /**
+     * Attaches a bank transfer destination.
+     *
+     * <p>Switching away from {@link PaymentMethod#BANK_TRANSFER} clears it, because the
+     * server rejects transfer details on a non-transfer sale.</p>
+     */
+    @NonNull
+    public Cart withTransfer(@NonNull PaymentMethod value,
+                             @Nullable TransferDetails details) {
+        TransferDetails kept = value == PaymentMethod.BANK_TRANSFER ? details : null;
+        return new Cart(lines, discount, value, customerId, customerName, kept);
     }
 
     public boolean hasCustomer() {
@@ -106,12 +129,12 @@ public final class Cart {
             if (line.getDrugId() == drugId) {
                 List<CartLine> next = new ArrayList<>(lines);
                 next.set(i, line.withQuantity(line.getQuantity() + 1));
-                return new Cart(next, discount, paymentMethod, customerId, customerName);
+                return new Cart(next, discount, paymentMethod, customerId, customerName, transfer);
             }
         }
         List<CartLine> next = new ArrayList<>(lines);
         next.add(new CartLine(drug, 1));
-        return new Cart(next, discount, paymentMethod, customerId, customerName);
+        return new Cart(next, discount, paymentMethod, customerId, customerName, transfer);
     }
 
     @NonNull
@@ -129,7 +152,7 @@ public final class Cart {
             } else {
                 next.set(i, line.withQuantity(quantity));
             }
-            return new Cart(next, discount, paymentMethod, customerId, customerName);
+            return new Cart(next, discount, paymentMethod, customerId, customerName, transfer);
         }
         return this;
     }
@@ -142,7 +165,7 @@ public final class Cart {
             CartLine line = next.get(i);
             if (line.getDrugId() == drugId) {
                 next.set(i, line.withPriceOverride(price));
-                return new Cart(next, discount, paymentMethod, customerId, customerName);
+                return new Cart(next, discount, paymentMethod, customerId, customerName, transfer);
             }
         }
         return this;
@@ -152,17 +175,17 @@ public final class Cart {
     public Cart remove(long drugId) {
         List<CartLine> next = new ArrayList<>(lines);
         next.removeIf(line -> line.getDrugId() == drugId);
-        return new Cart(next, discount, paymentMethod, customerId, customerName);
+        return new Cart(next, discount, paymentMethod, customerId, customerName, transfer);
     }
 
     @NonNull
     public Cart withDiscount(@NonNull BigDecimal value) {
-        return new Cart(lines, value.max(BigDecimal.ZERO), paymentMethod, customerId, customerName);
+        return new Cart(lines, value.max(BigDecimal.ZERO), paymentMethod, customerId, customerName, transfer);
     }
 
     @NonNull
     public Cart withPaymentMethod(@NonNull PaymentMethod value) {
-        return new Cart(lines, discount, value, customerId, customerName);
+        return new Cart(lines, discount, value, customerId, customerName, transfer);
     }
 
     /**
@@ -173,15 +196,15 @@ public final class Cart {
     @NonNull
     public Cart withCustomer(@Nullable Long id, @Nullable String name) {
         if (paymentMethod != PaymentMethod.CREDIT && id == null) {
-            return new Cart(lines, discount, paymentMethod, null, null);
+            return new Cart(lines, discount, paymentMethod, null, null, transfer);
         }
-        return new Cart(lines, discount, paymentMethod, id, name);
+        return new Cart(lines, discount, paymentMethod, id, name, transfer);
     }
 
     /** Clears lines but keeps the payment method (common for the next customer). */
     @NonNull
     public Cart cleared() {
-        return new Cart(new ArrayList<>(), discount, paymentMethod, customerId, customerName);
+        return new Cart(new ArrayList<>(), discount, paymentMethod, customerId, customerName, transfer);
     }
 
     /**
@@ -222,6 +245,12 @@ public final class Cart {
         }
         if (paymentMethod == PaymentMethod.CREDIT && customerId == null) {
             problems.add("credit sales require a customer");
+        }
+        // The server pairs transfer details with BANK_TRANSFER in both directions, so a
+        // transfer sale without a destination can never be submitted and a destination on
+        // any other method is dropped rather than sent.
+        if (paymentMethod == PaymentMethod.BANK_TRANSFER && (transfer == null || !transfer.isComplete())) {
+            problems.add("a bank transfer needs the provider, account name and account details");
         }
         if (customerId == null && !totals.isPaidInFull()) {
             // No customer means no debt can be recorded: the server rejects this.

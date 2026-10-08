@@ -116,6 +116,8 @@ public class SaleService {
             throw new InvalidSaleException("Credit sales require a customer");
         }
 
+        CreateSaleRequest.TransferDetails transfer = resolveTransfer(paymentMethod, request.transfer());
+
         // Serialize all stock access for the involved drugs (ascending id order).
         Map<Long, Drug> lockedDrugs = inventoryService.lockDrugs(drugIds);
         LocalDate today = LocalDate.now(clock);
@@ -190,6 +192,10 @@ public class SaleService {
         sale.setCustomer(customer);
         sale.setCreatedBy(AuditService.currentUserId().orElse(null));
         sale.setPaymentMethod(paymentMethod);
+        if (transfer != null) {
+            sale.setTransferDetails(transfer.provider(),
+                    transfer.accountName().trim(), transfer.accountIdentifier().trim());
+        }
         sale.setSubtotal(subtotal);
         sale.setDiscount(discount);
         sale.setTotal(total);
@@ -303,7 +309,10 @@ public class SaleService {
                 MoneyUtil.round2(sale.getCostTotal()),
                 MoneyUtil.round2(sale.getProfitTotal()),
                 MoneyUtil.round2(sale.getRefundedTotal()),
-                itemResponses);
+                itemResponses,
+                sale.getTransferProvider(),
+                sale.getTransferAccountName(),
+                sale.getTransferAccountIdentifier());
     }
 
     private Map<Long, String> usernames(List<Long> userIds) {
@@ -313,6 +322,49 @@ public class SaleService {
         }
         return userRepository.findAllById(ids).stream()
                 .collect(Collectors.toMap(User::getId, User::getUsername, (a, b) -> a));
+    }
+
+    /**
+     * Resolves the bank transfer destination for a sale.
+     *
+     * <p>The rule is deliberately strict in both directions. A {@code BANK_TRANSFER} sale
+     * without a destination is money the pharmacy cannot trace, so it is rejected rather
+     * than stored incomplete. Conversely a destination on a cash or card sale is
+     * meaningless and is rejected too, which keeps the three columns all-null or
+     * all-populated as {@code ck_sales_transfer_complete} expects.</p>
+     *
+     * @return the details to persist, or null when the sale is not a transfer
+     * @throws InvalidSaleException if the destination is missing or unexpected
+     */
+    private static CreateSaleRequest.TransferDetails resolveTransfer(
+            PaymentMethod paymentMethod,
+            CreateSaleRequest.TransferDetails transfer) {
+
+        if (paymentMethod != PaymentMethod.BANK_TRANSFER) {
+            if (transfer != null) {
+                throw new InvalidSaleException("transfer details are only valid for a bank "
+                        + "transfer sale, not " + paymentMethod);
+            }
+            return null;
+        }
+
+        if (transfer == null) {
+            throw new InvalidSaleException("A bank transfer sale requires transfer details "
+                    + "(provider, accountName, accountIdentifier)");
+        }
+        // Bean validation covers null/blank on the nested record, but only when the
+        // controller validates it; re-check here so the service is safe to call directly.
+        if (transfer.provider() == null) {
+            throw new InvalidSaleException("transfer.provider is required for a bank transfer");
+        }
+        if (transfer.accountName() == null || transfer.accountName().trim().isEmpty()) {
+            throw new InvalidSaleException("transfer.accountName is required for a bank transfer");
+        }
+        if (transfer.accountIdentifier() == null || transfer.accountIdentifier().trim().isEmpty()) {
+            throw new InvalidSaleException("transfer.accountIdentifier is required for a "
+                    + "bank transfer");
+        }
+        return transfer;
     }
 
     /**

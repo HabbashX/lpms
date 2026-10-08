@@ -201,6 +201,21 @@
     <string name="pos_subtotal">Subtotal</string>
     <string name="pos_total">Total</string>
     <string name="pos_due">Due</string>
+  <!-- Bank transfer destination, collected when BANK_TRANSFER is selected -->
+  <string name="pos_transfer_title">Bank transfer details</string>
+  <string name="pos_transfer_provider">Transfer to</string>
+  <string name="pos_transfer_account_name">Account name</string>
+  <string name="pos_transfer_identifier_default">Account details</string>
+  <string name="pos_transfer_summary">Transfer: %1$s · %2$s · %3$s</string>
+  <string name="pos_transfer_summary_short">%1$s · %2$s</string>
+  <string name="pos_transfer_edit">Edit transfer details</string>
+  <string name="pos_transfer_required">Enter the account name and details to record this transfer</string>
+  <string name="pos_transfer_missing_account_name">Enter the account name</string>
+  <string name="pos_transfer_missing_identifier">Enter the %1$s</string>
+  <!-- Bank transfer destination on the sale detail screen and receipt -->
+  <string name="sale_transfer_to">Transfer to</string>
+  <string name="sale_transfer_account">Account: %1$s</string>
+  <string name="sale_transfer_identifier">Details: %1$s</string>
     <string name="pos_pick_customer">Add customer</string>
     <string name="pos_customer_selected">Customer selected</string>
     <string name="pos_customer_search">Search name or phone</string>

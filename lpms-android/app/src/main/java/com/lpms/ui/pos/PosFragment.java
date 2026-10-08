@@ -6,6 +6,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -27,6 +28,9 @@ import com.lpms.data.dto.CustomerResponse;
 import com.lpms.data.dto.DrugResponse;
 import com.lpms.data.dto.PaymentMethod;
 import com.lpms.data.dto.SaleResponse;
+import com.lpms.data.dto.TransferDetails;
+import com.lpms.data.dto.TransferProvider;
+import com.lpms.databinding.DialogBankTransferBinding;
 import com.lpms.databinding.FragmentPosBinding;
 import com.lpms.databinding.ItemDetailRowBinding;
 import com.lpms.domain.cart.CartLine;
@@ -34,6 +38,7 @@ import com.lpms.domain.cart.CartTotals;
 import com.lpms.ui.pos.scan.BarcodeScanner;
 import com.lpms.ui.sales.SaleDetailFragment;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -49,6 +54,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 public final class PosFragment extends Fragment implements CartAdapter.Listener {
 
     private FragmentPosBinding binding;
+    /** Guards against the chip listener re-opening the dialog during {@code render}. */
+    private boolean transferDialogShowing = false;
     private PosViewModel viewModel;
     private CartAdapter cartAdapter;
     private DrugsSearchAdapter searchAdapter;
@@ -151,10 +158,96 @@ public final class PosFragment extends Fragment implements CartAdapter.Listener 
 
         binding.paymentChips.setOnCheckedStateChangeListener((group, checkedIds) -> {
             int chipId = checkedIds.isEmpty() ? R.id.chip_cash : checkedIds.get(0);
-            viewModel.setPaymentMethod(methodFor(chipId));
+            PaymentMethod method = methodFor(chipId);
+            viewModel.setPaymentMethod(method);
+            // Bank transfer money cannot be traced without a destination, so ask for one
+            // at the moment it is chosen rather than failing at confirmation.
+            if (method == PaymentMethod.BANK_TRANSFER) {
+                showTransferDialog();
+            }
         });
 
+        binding.transferRow.setOnClickListener(v -> showTransferDialog());
+
         binding.confirmSale.setOnClickListener(v -> confirm());
+    }
+
+    /**
+     * Asks where a bank transfer payment is going: provider, account name, and the
+     * identifier that provider actually uses.
+     *
+     * <p>Cancelling leaves any previously recorded destination untouched, so a mis-tap on
+     * the chip cannot silently discard details the cashier already entered.</p>
+     */
+    private void showTransferDialog() {
+        if (binding == null || transferDialogShowing) {
+            return;
+        }
+        DialogBankTransferBinding dialog =
+                DialogBankTransferBinding.inflate(getLayoutInflater());
+        TransferDetails existing = viewModel.cart().getValue() == null
+                ? null : viewModel.cart().getValue().getTransfer();
+
+        List<String> providerNames = new ArrayList<>();
+        for (TransferProvider provider : TransferProvider.values()) {
+            providerNames.add(provider.displayName());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_list_item_1, providerNames);
+        dialog.provider.setAdapter(adapter);
+
+        TransferProvider[] chosen = new TransferProvider[1];
+        chosen[0] = existing == null ? null : TransferProvider.fromWire(existing.getProvider());
+        if (chosen[0] == null) {
+            chosen[0] = TransferProvider.JAWWAL_PAY;
+        }
+        dialog.provider.setText(chosen[0].displayName(), false);
+        applyProviderLabels(dialog, chosen[0]);
+        if (existing != null) {
+            dialog.accountName.setText(existing.getAccountName());
+            dialog.accountIdentifier.setText(existing.getAccountIdentifier());
+        }
+
+        dialog.provider.setOnItemClickListener((parent, view, position, id) ->
+                applyProviderLabels(dialog, TransferProvider.values()[position]));
+
+        transferDialogShowing = true;
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.pos_transfer_title)
+                .setView(dialog.getRoot())
+                .setPositiveButton(R.string.action_save, (v, which) -> {
+                    TransferProvider provider = chosen[0];
+                    String accountName = text(dialog.accountName).trim();
+                    String identifier = text(dialog.accountIdentifier).trim();
+                    if (accountName.isEmpty()) {
+                        dialog.accountNameLayout.setError(
+                                getString(R.string.pos_transfer_missing_account_name));
+                        return;
+                    }
+                    if (identifier.isEmpty()) {
+                        dialog.accountIdentifierLayout.setError(getString(
+                                R.string.pos_transfer_missing_identifier,
+                                provider.identifierLabel().toLowerCase(java.util.Locale.getDefault())));
+                        return;
+                    }
+                    viewModel.setTransfer(new TransferDetails(provider, accountName, identifier));
+                })
+                .setNegativeButton(R.string.action_cancel, null)
+                .setOnDismissListener(d -> transferDialogShowing = false)
+                .show();
+    }
+
+    /** Retitles the identifier box, because its meaning depends on the provider. */
+    private void applyProviderLabels(@NonNull DialogBankTransferBinding dialog,
+                                     @NonNull TransferProvider provider) {
+        dialog.accountIdentifierLayout.setHint(provider.identifierLabel());
+        dialog.accountIdentifierLayout.setHelperText(provider.identifierHint());
+        // An email is not a number and a number is not an email; the soft keyboard should
+        // match what the cashier is about to type.
+        dialog.accountIdentifier.setInputType(provider == TransferProvider.PAYPAL
+                ? android.text.InputType.TYPE_CLASS_TEXT
+                        | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                : android.text.InputType.TYPE_CLASS_TEXT);
     }
 
     @NonNull
@@ -245,6 +338,7 @@ viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
         addTotalRow(R.string.pos_discount, Money.format(totals.getDiscount(), currencySymbol), false);
         addTotalRow(R.string.pos_total, Money.format(totals.getTotal(), currencySymbol), true);
         addTotalRow(R.string.pos_due, Money.format(totals.getAmountDue(), currencySymbol), true);
+        renderTransfer(summary.getCart());
 
         List<String> problems = summary.getProblems();
         if (problems.isEmpty()) {
@@ -261,6 +355,30 @@ viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
                 : R.string.pos_amount_paid);
 
         renderSubmitState(viewModel.submitting().getValue());
+    }
+
+    /**
+     * Shows the recorded transfer destination under the totals, and offers to edit it.
+     *
+     * <p>Only meaningful for {@link PaymentMethod#BANK_TRANSFER}, so it is hidden for every
+     * other method rather than shown empty.</p>
+     */
+    private void renderTransfer(@NonNull com.lpms.domain.cart.Cart cart) {
+        if (cart.getPaymentMethod() != PaymentMethod.BANK_TRANSFER) {
+            binding.transferRow.setVisibility(View.GONE);
+            return;
+        }
+        binding.transferRow.setVisibility(View.VISIBLE);
+        TransferDetails transfer = cart.getTransfer();
+        if (transfer == null || !transfer.isComplete()) {
+            binding.transferValue.setText(R.string.pos_transfer_required);
+            return;
+        }
+        TransferProvider provider =
+                TransferProvider.fromWire(transfer.getProvider());
+        String providerName = provider == null ? transfer.getProvider() : provider.displayName();
+        binding.transferValue.setText(getString(R.string.pos_transfer_summary,
+                providerName, transfer.getAccountName(), transfer.getAccountIdentifier()));
     }
 
     private void addTotalRow(int labelRes, @NonNull String value, boolean emphasise) {

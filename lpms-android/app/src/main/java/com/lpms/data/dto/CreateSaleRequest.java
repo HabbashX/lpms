@@ -48,16 +48,21 @@ public final class CreateSaleRequest {
     @SerializedName("amountPaid")
     private final BigDecimal amountPaid;
 
+    @SerializedName("transfer")
+    private final TransferDetails transfer;
+
     public CreateSaleRequest(@Nullable Long customerId,
                              @NonNull String paymentMethod,
                              @NonNull List<CreateSaleItemRequest> items,
                              @Nullable BigDecimal discount,
-                             @Nullable BigDecimal amountPaid) {
+                             @Nullable BigDecimal amountPaid,
+                             @Nullable TransferDetails transfer) {
         this.customerId = customerId;
         this.paymentMethod = paymentMethod;
         this.items = items == null ? new ArrayList<>() : items;
         this.discount = discount;
         this.amountPaid = amountPaid;
+        this.transfer = transfer;
     }
 
     @Nullable
@@ -85,6 +90,12 @@ public final class CreateSaleRequest {
     @Nullable
     public BigDecimal getAmountPaid() {
         return amountPaid;
+    }
+
+    /** Bank transfer destination; non-null only for {@link PaymentMethod#BANK_TRANSFER}. */
+    @Nullable
+    public TransferDetails getTransfer() {
+        return transfer;
     }
 
     /** Local pre-flight checks; a violation is a cart bug the server would reject. */
@@ -115,6 +126,15 @@ public final class CreateSaleRequest {
         }
         if (amountPaid != null && amountPaid.signum() < 0) {
             problems.add("amountPaid must not be negative");
+        }
+        // The server pairs transfer details with BANK_TRANSFER in both directions:
+        // required for a transfer, rejected on anything else.
+        boolean isTransfer = PaymentMethod.fromNullable(paymentMethod) == PaymentMethod.BANK_TRANSFER;
+        if (isTransfer && (transfer == null || !transfer.isComplete())) {
+            problems.add("a bank transfer sale needs the provider, account name and account");
+        }
+        if (!isTransfer && transfer != null) {
+            problems.add("transfer details only apply to a bank transfer sale");
         }
         return Collections.unmodifiableList(problems);
     }
