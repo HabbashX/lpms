@@ -21,6 +21,7 @@ import com.lpms.data.repo.InventoryRepository;
 import com.lpms.ui.common.FormError;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +33,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Receive stock (ADMIN/PHARMACIST).
@@ -93,6 +96,27 @@ public final class ReceiveStockViewModel extends ViewModel {
     private final MutableLiveData<FormError> quantityError = new MutableLiveData<>();
     private final MutableLiveData<FormError> priceError = new MutableLiveData<>();
     private final MutableLiveData<FormError> expirationError = new MutableLiveData<>();
+
+    /**
+     * The in-flight preview subscription, held so it can be cancelled.
+     *
+     * <p>The profit field refreshes the preview as the user types, which without this
+     * produced a continuous stream of {@code GET /pricing} calls: responses arrived out of
+     * order and each one re-rendered the preview. Cancelling the previous subscription means
+     * at most one request is ever outstanding and only the newest answer is applied.</p>
+     */
+    @Nullable
+    private Disposable previewRequest;
+
+    /**
+     * The profit value a preview is already being fetched for, so re-entering the same
+     * number does not ask again.
+     */
+    @Nullable
+    private BigDecimal previewedProfitPerUnit;
+
+    /** True once a preview has been fetched for the current drug with no profit. */
+    private boolean previewedBasePosition;
 
     @Inject
     public ReceiveStockViewModel(@NonNull InventoryRepository inventoryRepository,
@@ -176,6 +200,12 @@ public final class ReceiveStockViewModel extends ViewModel {
     public void selectDrug(@NonNull DrugResponse drug) {
         selectedDrug.setValue(drug);
         drugResults.setValue(Collections.emptyList());
+        // A new drug invalidates the previous what-if, its fetched preview and the drug the
+        // cached preview belonged to.
+        lastProfitPerUnit = null;
+        previewedBasePosition = false;
+        previewedProfitPerUnit = null;
+        lastPreviewedDrugId = null;
         loadPosition(null);
     }
 
@@ -198,6 +228,29 @@ public final class ReceiveStockViewModel extends ViewModel {
         loadPosition(lastProfitPerUnit);
     }
 
+    /**
+     * Called as the profit field changes.
+     *
+     * <p>The value has to come from here: the ViewModel had no idea what was typed, so every
+     * keystroke re-requested the same base position instead of the what-if the user was
+     * actually asking about, and the preview never reflected their number.</p>
+     *
+     * <p>An unparseable or empty value falls back to the base position rather than erroring
+     * mid-typing; the field only rejects a bad value on submit.</p>
+     */
+    public void onProfitChanged(@Nullable String profitText) {
+        DrugResponse drug = selectedDrug.getValue();
+        if (drug == null || drug.getId() == null) {
+            return;
+        }
+        if (pricingOption.getValue() != PricingOption.PROFIT_PER_UNIT) {
+            return;
+        }
+        BigDecimal parsed = Money.parsePositive(profitText);
+        lastProfitPerUnit = parsed;
+        loadPosition(parsed);
+    }
+
     @Nullable
     private BigDecimal lastProfitPerUnit;
 
@@ -206,17 +259,58 @@ public final class ReceiveStockViewModel extends ViewModel {
         if (drug == null || drug.getId() == null) {
             return;
         }
+
+        // Identical question already answered or on its way: do not ask again. Without this
+        // a re-render of the same values produced a request per frame.
+        if (profitPerUnit == null && previewedBasePosition) {
+            return;
+        }
+        if (profitPerUnit != null && Objects.equals(profitPerUnit, previewedProfitPerUnit)) {
+            return;
+        }
+
         long id = drug.getId();
-        disposables.add(inventoryRepository.pricing(id,
-                        profitPerUnit == null
-                                ? InventoryRepository.PricingMode.NONE
-                                : InventoryRepository.PricingMode.PROFIT_PER_UNIT,
-                        profitPerUnit, null)
+
+        // Switching drugs invalidates anything remembered for the previous one.
+        if (!Objects.equals(lastPreviewedDrugId, id)) {
+            previewedBasePosition = false;
+            previewedProfitPerUnit = null;
+            lastPreviewedDrugId = id;
+        }
+
+        previewedBasePosition = profitPerUnit == null;
+        previewedProfitPerUnit = profitPerUnit;
+
+        Single<DrugPricingResponse> call = inventoryRepository.pricing(id,
+                profitPerUnit == null
+                        ? InventoryRepository.PricingMode.NONE
+                        : InventoryRepository.PricingMode.PROFIT_PER_UNIT,
+                profitPerUnit, null);
+
+        // Cancel whatever is outstanding: only the newest question is worth answering.
+        if (previewRequest != null) {
+            previewRequest.dispose();
+        }
+
+        previewRequest = call
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        pricing -> preview.setValue(toPreview(pricing)),
-                        throwable -> preview.setValue(null)));
+                        pricing -> {
+                            previewRequest = null;
+                            preview.setValue(toPreview(pricing));
+                        },
+                        throwable -> {
+                            previewRequest = null;
+                            preview.setValue(null);
+                        });
+
+        // Also tracked by the ViewModel so it is torn down with it; the local reference
+        // above is what loadPosition uses to cancel a superseded request.
+        disposables.add(previewRequest);
     }
+
+    @Nullable
+    private Long lastPreviewedDrugId;
 
     @NonNull
     private Preview toPreview(@NonNull DrugPricingResponse pricing) {

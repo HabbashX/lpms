@@ -115,7 +115,10 @@ public final class ReceiveStockFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                viewModel.loadPreviewIfProfit();
+                // Debounced: typing "12.50" is five keystrokes, and each one used to mean a
+                // round trip for the what-if price. Only the value the user settles on is
+                // worth asking about.
+                schedulePreview(text(binding.profit));
             }
         });
 
@@ -190,6 +193,25 @@ public final class ReceiveStockFragment extends Fragment {
         }
     }
 
+    /**
+ * Requests the what-if preview once typing settles.
+ *
+ * <p>Cancelled on every keystroke, so a fast typist sends one request for the number they
+ * finished rather than one per character.</p>
+ */
+    private void schedulePreview(@NonNull String profitText) {
+        if (previewRunnable != null) {
+            binding.getRoot().removeCallbacks(previewRunnable);
+        }
+        previewRunnable = () -> viewModel.onProfitChanged(profitText);
+        binding.getRoot().postDelayed(previewRunnable, PREVIEW_DEBOUNCE_MS);
+    }
+
+    @Nullable
+    private Runnable previewRunnable;
+
+    private static final long PREVIEW_DEBOUNCE_MS = 350L;
+
     private void submit() {
         viewModel.submit(
                 text(binding.quantity),
@@ -207,9 +229,13 @@ public final class ReceiveStockFragment extends Fragment {
         }
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.stock_received_title)
+                // The order matters: stock_received_message is "%1$d units at %2$s", so the
+                // count is the first argument. Passing money first made Formatter throw
+                // IllegalFormatConversionException - the batch had already been saved, so
+                // the purchase succeeded and the confirmation dialog killed the app.
                 .setMessage(getString(R.string.stock_received_message,
-                        Money.format(batch.getUnitPurchasePrice(), currencySymbol),
-                        batch.getQuantityReceived()))
+                        batch.getQuantityReceived(),
+                        Money.format(batch.getUnitPurchasePrice(), currencySymbol)))
                 .setPositiveButton(R.string.action_close, (dialog, which) ->
                         NavHostFragment.findNavController(this).navigateUp())
                 .setOnCancelListener(dialog ->
@@ -235,6 +261,12 @@ public final class ReceiveStockFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        // A debounced preview may still be queued; drop it rather than let it touch a
+        // binding that is about to be null.
+        if (previewRunnable != null && binding != null) {
+            binding.getRoot().removeCallbacks(previewRunnable);
+        }
+        previewRunnable = null;
         super.onDestroyView();
         binding = null;
     }
