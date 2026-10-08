@@ -171,6 +171,13 @@ public final class PosViewModel extends ViewModel {
 
     public void setLinePrice(long drugId, @Nullable String priceText) {
         BigDecimal price = Money.parsePositive(priceText);
+        CartLine existing = cart.getValue().line(drugId);
+        if (existing != null && java.util.Objects.equals(existing.getPriceOverride(), price)) {
+            // The field is committed on every keystroke, so the model routinely echoes a
+            // value back. Republishing an identical cart would rebind the row and reset
+            // the cursor mid-typing.
+            return;
+        }
         publish(cart.getValue().setLinePrice(drugId, price), true);
     }
 

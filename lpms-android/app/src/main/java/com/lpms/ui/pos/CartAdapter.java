@@ -38,6 +38,9 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
 
     private final Listener listener;
     private final String currencySymbol;
+    /** Captured from onCreateViewHolder so focused rows can be flushed before checkout. */
+    @Nullable
+    private RecyclerView recyclerView;
 
     public CartAdapter(@NonNull Listener listener, @NonNull String currencySymbol) {
         super(DIFF);
@@ -45,9 +48,33 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
         this.currencySymbol = currencySymbol;
     }
 
+    /**
+     * Commits the price field of whichever row still holds focus.
+     *
+     * <p>The watcher already commits on every keystroke, but the final one can still be
+     * undispatched when Confirm is tapped. Without this the sale silently falls back to
+     * the drug's default price - the worst outcome, because the cashier can see the price
+     * they typed while the customer is charged something else.</p>
+     */
+    public void commitFocusedPrice() {
+        if (recyclerView == null) {
+            return;
+        }
+        for (int i = 0; i < recyclerView.getChildCount(); i++) {
+            RecyclerView.ViewHolder holder =
+                    recyclerView.getChildViewHolder(recyclerView.getChildAt(i));
+            if (holder instanceof ViewHolder) {
+                ((ViewHolder) holder).commitPriceIfFocused(listener);
+            }
+        }
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (recyclerView == null && parent instanceof RecyclerView) {
+            recyclerView = (RecyclerView) parent;
+        }
         return new ViewHolder(ItemCartLineBinding.inflate(
                 LayoutInflater.from(parent.getContext()), parent, false));
     }
@@ -60,15 +87,46 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
     static final class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ItemCartLineBinding binding;
+        /** The row and listener currently bound, used by the price watcher. */
+        @Nullable
+        private CartLine boundLine;
+        @Nullable
+        private Listener boundListener;
+        /** Suppresses the watcher while bind() writes the field itself. */
+        private boolean suppressWatcher;
 
         ViewHolder(@NonNull ItemCartLineBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
+            // Committed as the cashier types rather than on blur. Tapping Confirm straight
+            // after typing dispatched the click before focus left the field, so the typed
+            // price was discarded and the sale silently fell back to the drug default -
+            // the worst outcome, because the cashier can see the price they typed.
+            binding.price.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int before, int count) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                    CartLine line = boundLine;
+                    Listener target = boundListener;
+                    if (suppressWatcher || line == null || target == null) {
+                        return;
+                    }
+                    target.onPriceChanged(line, text(binding.price));
+                }
+            });
         }
 
         void bind(@NonNull CartLine line,
                   @NonNull Listener listener,
-                  @NonNull String currencySymbol) {
+                  @NonNull String currencySymbol) {            this.boundLine = line;
+            this.boundListener = listener;
             binding.name.setText(line.getDrugName());
             binding.quantity.setText(String.valueOf(line.getQuantity()));
 
@@ -80,9 +138,12 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
             binding.stock.setText(stockText.toString());
 
             // Only write the price field from the model; the field is left blank while
-            // untouched so an override reads as an explicit cashier decision.
+            // untouched so an override reads as an explicit cashier decision. Guarded so
+            // this write does not come straight back through the watcher.
+            suppressWatcher = true;
             binding.price.setText(line.getPriceOverride() == null
                     ? "" : Money.toPlainString(line.getPriceOverride()));
+            suppressWatcher = false;
 
             BigDecimal lineTotal = line.lineTotal();
             binding.lineTotal.setText(lineTotal == null
@@ -95,13 +156,8 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
                     listener.onQuantityChanged(line, line.getQuantity() + 1));
             binding.remove.setOnClickListener(v -> listener.onRemove(line));
 
-            binding.price.setOnFocusChangeListener((v, focused) -> {
-                if (!focused) {
-                    listener.onPriceChanged(line, text(binding.price));
-                }
-            });
             binding.price.setOnEditorActionListener((v, actionId, event) -> {
-                listener.onPriceChanged(line, text(binding.price));
+                // Already committed by the watcher; this only dismisses the keyboard.
                 binding.price.clearFocus();
                 return true;
             });
@@ -109,6 +165,14 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
             String warning = warningFor(line);
             binding.warning.setVisibility(warning == null ? View.GONE : View.VISIBLE);
             binding.warning.setText(warning == null ? "" : warning);
+        }
+
+        /** Commits this row's price if it is the focused one. */
+        void commitPriceIfFocused(@NonNull Listener listener) {
+            CartLine line = boundLine;
+            if (line != null && binding.price.hasFocus()) {
+                listener.onPriceChanged(line, text(binding.price));
+            }
         }
 
         @Nullable

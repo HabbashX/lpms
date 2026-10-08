@@ -157,6 +157,17 @@ public final class Cart {
         return this;
     }
 
+    /** The line for a drug, or null when it is not in the cart. */
+    @Nullable
+    public CartLine line(long drugId) {
+        for (CartLine line : lines) {
+            if (line.getDrugId() == drugId) {
+                return line;
+            }
+        }
+        return null;
+    }
+
     /** Per-line price override; null restores the drug default. */
     @NonNull
     public Cart setLinePrice(long drugId, @Nullable BigDecimal price) {

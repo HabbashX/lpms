@@ -419,6 +419,9 @@ viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
     }
 
     private void confirm() {
+        // Read any price field still holding focus and commit it, so the sale cannot be
+        // submitted with a typed-but-uncommitted override.
+        flushFocusedPrice();
         PosViewModel.Summary summary = viewModel.summary().getValue();
         if (summary == null || !summary.canSubmit()) {
             return;
@@ -517,11 +520,21 @@ viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
         viewModel.setQuantity(line.getDrugId(), newQuantity);
     }
 
+    /**
+     * Commits the price field of whichever row still has focus.
+     *
+     * <p>Delegated to the adapter, which owns the rows.</p>
+     */
+    private void flushFocusedPrice() {
+        if (cartAdapter != null) {
+            cartAdapter.commitFocusedPrice();
+        }
+    }
+
     @Override
     public void onPriceChanged(@NonNull CartLine line, @Nullable String priceText) {
         viewModel.setLinePrice(line.getDrugId(), priceText);
     }
-
     @Override
     public void onRemove(@NonNull CartLine line) {
         viewModel.removeLine(line.getDrugId());
