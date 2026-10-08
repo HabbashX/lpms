@@ -5,7 +5,10 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -54,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        applySystemBarInsets();
+
         viewModel = new ViewModelProvider(this).get(ShellViewModel.class);
 
         NavHostFragment host = (NavHostFragment) getSupportFragmentManager()
@@ -73,6 +78,29 @@ public class MainActivity extends AppCompatActivity {
                 updateChrome(destination.getId()));
 
         viewModel.events().observe(this, this::handleSessionEvent);
+    }
+
+    /**
+     * Keeps app content clear of the status and navigation bars.
+     *
+     * <p>The activity draws edge to edge, which on API 35 is also the platform default, so
+     * without this the root extends under both system bars. Every screen would then lose
+     * its last few pixels to them: a form's Save button sat behind the navigation bar and
+     * looked cut in half, and the toolbars sat under the status bar.</p>
+     *
+     * <p>Applied once here rather than in each screen. Every toolbar lives inside a
+     * fragment layout, so doing it per screen would mean touching a layout per destination
+     * and still missing the next one. The insets are consumed so no child applies them
+     * twice.</p>
+     */
+    private void applySystemBarInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (view, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            | WindowInsetsCompat.Type.displayCutout());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
     }
 
     @Override
