@@ -32,6 +32,13 @@ public final class SessionStore {
     private static final String K_ACCESS_EXPIRES = "access_expires_at";
     private static final String K_REFRESH_EXPIRES = "refresh_expires_at";
 
+    /**
+     * Stands in for an expiry that was never written. Far enough ahead to never look
+     * expired, but a normal value so arithmetic on it cannot overflow.
+     */
+    private static final Instant UNKNOWN_EXPIRY =
+            Instant.parse("2999-01-01T00:00:00Z");
+
     private final SharedPreferences prefs;
 
     public SessionStore(@NonNull Context context) {
@@ -59,6 +66,11 @@ public final class SessionStore {
 
     /** Atomically persists the whole session, including a rotated token pair. */
     public void save(@NonNull Session session) {
+        // commit(), not apply(): the previous refresh token is already dead server-side
+        // the moment a new pair is issued, so a write still sitting in the async queue
+        // would leave a dead token on disk if the process is killed. Next launch would
+        // replay it, and the backend treats a replayed rotated token as theft and
+        // revokes every session - signing the user out for backgrounding the app.
         prefs.edit()
                 .putLong(K_USER_ID, session.getUserId())
                 .putString(K_USERNAME, session.getUsername())
@@ -68,17 +80,19 @@ public final class SessionStore {
                 .putString(K_REFRESH_TOKEN, session.getRefreshToken())
                 .putLong(K_ACCESS_EXPIRES, session.getAccessExpiresAt().toEpochMilli())
                 .putLong(K_REFRESH_EXPIRES, session.getRefreshExpiresAt().toEpochMilli())
-                .apply();
+                .commit();
     }
 
     /** Persists only the rotated tokens/expiries, leaving the cached profile intact. */
     public void saveTokens(@NonNull Session session) {
+        // commit() for the same reason as save(): a rotated refresh token must be on disk
+        // before the dead one can still be read back.
         prefs.edit()
                 .putString(K_ACCESS_TOKEN, session.getAccessToken())
                 .putString(K_REFRESH_TOKEN, session.getRefreshToken())
                 .putLong(K_ACCESS_EXPIRES, session.getAccessExpiresAt().toEpochMilli())
                 .putLong(K_REFRESH_EXPIRES, session.getRefreshExpiresAt().toEpochMilli())
-                .apply();
+                .commit();
     }
 
     /** Persists role/mustChangePassword after {@code GET /auth/me}. */
@@ -108,6 +122,9 @@ public final class SessionStore {
         boolean mustChange = prefs.getBoolean(K_MUST_CHANGE, false);
         long accessExp = prefs.getLong(K_ACCESS_EXPIRES, 0L);
         long refreshExp = prefs.getLong(K_REFRESH_EXPIRES, 0L);
+        // A missing expiry means "unknown", not "1970". Treating it as epoch zero makes
+        // the session look expired and signs the user out instead of letting the refresh
+        // attempt decide - the server is the authority on whether a token is still good.
         return new Session(
                 userId,
                 username == null ? "" : username,
@@ -115,8 +132,8 @@ public final class SessionStore {
                 mustChange,
                 access,
                 refresh,
-                Instant.ofEpochMilli(accessExp),
-                Instant.ofEpochMilli(refreshExp));
+                accessExp > 0L ? Instant.ofEpochMilli(accessExp) : UNKNOWN_EXPIRY,
+                refreshExp > 0L ? Instant.ofEpochMilli(refreshExp) : UNKNOWN_EXPIRY);
     }
 
     /** Wipes every trace of the session (tokens, expiries, cached profile). */
