@@ -137,12 +137,16 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
             }
             binding.stock.setText(stockText.toString());
 
-            // Only write the price field from the model; the field is left blank while
-            // untouched so an override reads as an explicit cashier decision. Guarded so
-            // this write does not come straight back through the watcher.
+            // Show the price actually being charged, so it is visible and editable where
+            // the cashier looks for it. Leaving this box blank hid the price entirely: the
+            // row's only label was the hint, which disappears once the field has text, so
+            // an empty box read as "fill this only to override" and prices were typed into
+            // Cash received instead - which never reaches the sale.
+            // An untouched row keeps override == null, so the drug default is still used.
             suppressWatcher = true;
-            binding.price.setText(line.getPriceOverride() == null
-                    ? "" : Money.toPlainString(line.getPriceOverride()));
+            BigDecimal effective = line.effectivePrice();
+            binding.price.setText(effective == null
+                    ? "" : Money.toPlainString(effective));
             suppressWatcher = false;
 
             BigDecimal lineTotal = line.lineTotal();
@@ -156,6 +160,14 @@ public final class CartAdapter extends ListAdapter<CartLine, CartAdapter.ViewHol
                     listener.onQuantityChanged(line, line.getQuantity() + 1));
             binding.remove.setOnClickListener(v -> listener.onRemove(line));
 
+            // The box is prefilled with the current price, so typing must replace it rather
+            // than append: "0.75" + "1" would otherwise become "0.751".
+            binding.price.setOnFocusChangeListener((v, focused) -> {
+                if (focused && binding.price.getText() != null
+                        && binding.price.getText().length() > 0) {
+                    binding.price.selectAll();
+                }
+            });
             binding.price.setOnEditorActionListener((v, actionId, event) -> {
                 // Already committed by the watcher; this only dismisses the keyboard.
                 binding.price.clearFocus();

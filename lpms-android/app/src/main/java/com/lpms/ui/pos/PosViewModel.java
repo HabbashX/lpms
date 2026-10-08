@@ -366,6 +366,15 @@ public final class PosViewModel extends ViewModel {
                     ? CreateSaleItemRequest.withPrice(line.getDrugId(), line.getQuantity(), price)
                     : CreateSaleItemRequest.withDefaultPrice(line.getDrugId(),
                     line.getQuantity()));
+            if (com.lpms.BuildConfig.DEBUG) {
+                android.util.Log.d("PosViewModel", "line drug=" + line.getDrugId()
+                        + " qty=" + line.getQuantity()
+                        + " default=" + line.getDefaultPrice()
+                        + " override=" + line.getPriceOverride()
+                        + " effective=" + price
+                        + " hasOverride=" + line.hasOverride()
+                        + " sendingExplicitPrice=" + line.hasOverride());
+            }
         }
 
         BigDecimal paid = amountPaid.getValue() == null ? BigDecimal.ZERO : amountPaid.getValue();

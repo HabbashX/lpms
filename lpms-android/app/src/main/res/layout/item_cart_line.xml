@@ -38,13 +38,26 @@
                 tools:text="12 available" />
         </LinearLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/price_layout"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="112dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:hint="@string/pos_line_price">
+    <!--
+      Permanent label: the price box is prefilled, so the TextInputLayout hint would be
+      hidden at all times and the row would have no visible label for the price.
+    -->
+    <TextView
+        android:id="@+id/price_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:text="@string/pos_line_price"
+        android:textAppearance="?attr/textAppearanceLabelMedium"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/price_layout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/price"
