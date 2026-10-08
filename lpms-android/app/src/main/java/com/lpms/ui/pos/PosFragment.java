@@ -38,6 +38,7 @@ import com.lpms.domain.cart.CartTotals;
 import com.lpms.ui.pos.scan.BarcodeScanner;
 import com.lpms.ui.sales.SaleDetailFragment;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -338,6 +339,13 @@ viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
         addTotalRow(R.string.pos_discount, Money.format(totals.getDiscount(), currencySymbol), false);
         addTotalRow(R.string.pos_total, Money.format(totals.getTotal(), currencySymbol), true);
         addTotalRow(R.string.pos_due, Money.format(totals.getAmountDue(), currencySymbol), true);
+
+        // A figure above the total is change owed to the customer, not an error. It is
+        // shown prominently because the cashier has to hand it back.
+        BigDecimal change = viewModel.changeDue();
+        if (change.signum() > 0) {
+            addTotalRow(R.string.pos_change, Money.format(change, currencySymbol), true);
+        }
         renderTransfer(summary.getCart());
 
         List<String> problems = summary.getProblems();
@@ -349,10 +357,12 @@ viewModel.uncertainSubmit().observe(getViewLifecycleOwner(), uncertain -> {
         }
 
         binding.paymentChips.check(chipFor(summary.getCart().getPaymentMethod()));
+        // The field is what the customer hands over, not what is retained, so label it that
+        // way. Anything above the total comes back as change.
         binding.amountPaidLayout.setHint(summary.getCart().getPaymentMethod()
                 == PaymentMethod.CREDIT
                 ? R.string.pos_amount_paid_credit
-                : R.string.pos_amount_paid);
+                : R.string.pos_cash_received);
 
         renderSubmitState(viewModel.submitting().getValue());
     }

@@ -234,26 +234,21 @@ public final class PosViewModel extends ViewModel {
             // Changing the discount or payment method invalidates a typed "amount paid",
             // so re-default it to the new total.
             defaultAmountPaidToTotal();
-        } else {
-            clampAmountPaidToTotal();
         }
         recompute();
     }
 
     /**
-     * Keeps a prefilled paid amount valid after the total moves under it.
+     * Cash handed over minus the sale total - what the cashier gives back.
      *
-     * <p>The paid field is prefilled with the total, so editing a line price can leave it
-     * above the new total - which the server rejects outright. Following the total is what
-     * a cashier means anyway: they are not deliberately overpaying.</p>
+     * <p>Zero when the sale is not fully covered, when nothing was tendered, or for credit,
+     * where nothing changes hands at the till.</p>
      */
-    private void clampAmountPaidToTotal() {
+    @NonNull
+    public BigDecimal changeDue() {
         Cart current = cart.getValue();
-        BigDecimal total = current.totals(BigDecimal.ZERO).getTotal();
-        BigDecimal paid = amountPaid.getValue();
-        if (paid != null && paid.compareTo(total) > 0) {
-            amountPaid.setValue(total);
-        }
+        BigDecimal paid = amountPaid.getValue() == null ? BigDecimal.ZERO : amountPaid.getValue();
+        return current.changeDue(paid);
     }
 
     /** Casher convenience: prefill the paid field with the exact total. */
@@ -369,13 +364,18 @@ public final class PosViewModel extends ViewModel {
         BigDecimal paid = amountPaid.getValue() == null ? BigDecimal.ZERO : amountPaid.getValue();
         Cart cartSnapshot = current.getCart();
 
+        // The field is what the customer handed over, so it may exceed the total. Only the
+        // money actually kept is sent: the server rejects an amountPaid above the total,
+        // and the difference is change out of the drawer, not revenue.
+        BigDecimal retained = paid.min(cartSnapshot.totals(paid).getTotal()).max(BigDecimal.ZERO);
+
         submitting.setValue(true);
         disposables.add(salesRepository.create(
                         cartSnapshot.getCustomerId(),
                         cartSnapshot.getPaymentMethod(),
                         items,
                         cartSnapshot.getDiscount(),
-                        paid,
+                        retained,
                         cartSnapshot.getTransfer())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(

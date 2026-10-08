@@ -197,6 +197,9 @@
     <string name="pos_line_stock">Only %2$d in stock (requested %1$d)</string>
     <string name="pos_discount">Discount</string>
     <string name="pos_amount_paid">Amount paid</string>
+  <!-- What the customer hands over. Anything above the total is returned as change. -->
+  <string name="pos_cash_received">Cash received</string>
+  <string name="pos_change">Change</string>
     <string name="pos_amount_paid_credit">Amount paid (0 for credit)</string>
     <string name="pos_subtotal">Subtotal</string>
     <string name="pos_total">Total</string>

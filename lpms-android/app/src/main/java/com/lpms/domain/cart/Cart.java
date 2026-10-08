@@ -259,14 +259,23 @@ public final class Cart {
         if (amountPaid.signum() < 0) {
             problems.add("amount paid cannot be negative");
         }
-        // The server rejects amountPaid above the sale total, so it is caught here rather
-        // than as a failed confirmation. This is easy to hit: the paid field is prefilled
-        // with the total, so lowering a line price after typing it leaves the old, larger
-        // figure in place.
-        if (amountPaid.compareTo(totals.getTotal()) > 0) {
-            problems.add("amount paid is more than the sale total");
-        }
         return problems;
+    }
+
+    /**
+     * Change to hand back, or zero.
+     *
+     * <p>A figure above the total is not an error: the cashier typed what the customer
+     * <b>handed over</b>, and the difference is change out of the drawer. Only the money
+     * actually kept reaches the server - see {@link CartTotals}, which clamps the retained
+     * amount to the total before deriving debt.</p>
+     */
+    @NonNull
+    public BigDecimal changeDue(@NonNull BigDecimal amountPaid) {
+        BigDecimal retained = amountPaid.max(BigDecimal.ZERO);
+        BigDecimal total = totals(retained).getTotal();
+        BigDecimal change = retained.subtract(total);
+        return change.signum() > 0 ? change : BigDecimal.ZERO;
     }
 
     public boolean canSubmit(@NonNull BigDecimal amountPaid) {
