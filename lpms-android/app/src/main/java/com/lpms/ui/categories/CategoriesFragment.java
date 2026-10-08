@@ -27,6 +27,7 @@ import com.lpms.core.ui.UiState;
 import com.lpms.data.dto.CategoryResponse;
 import com.lpms.databinding.FragmentCategoriesBinding;
 import com.lpms.databinding.ItemCategoryBinding;
+import com.lpms.ui.drugs.DrugListFragment;
 
 import java.util.Collections;
 import java.util.List;
@@ -82,6 +83,11 @@ public final class CategoriesFragment extends Fragment {
             }
             Snackbar.make(binding.getRoot(), message.resolve(requireContext()),
                     Snackbar.LENGTH_LONG).show();
+        });
+        viewModel.blockedBy().observe(getViewLifecycleOwner(), category -> {
+            if (category != null) {
+                showBlockedBy(category);
+            }
         });
 
         viewModel.load();
@@ -169,6 +175,30 @@ public final class CategoriesFragment extends Fragment {
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_delete, (dialog, which) ->
                         viewModel.delete(category))
+                .show();
+    }
+
+    /**
+     * The backend refuses to delete a category that drugs still reference, which is right -
+     * it would orphan those drugs. The refusal used to be a dead end, so this offers the
+     * only useful next step: see the drugs in that category and move them.
+     */
+    private void showBlockedBy(@NonNull CategoryResponse category) {
+        if (category.getId() == null) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.category_in_use_title)
+                .setMessage(getString(R.string.category_in_use_body, category.getName()))
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.category_view_drugs, (dialog, which) -> {
+                    Bundle args = new Bundle();
+                    args.putLong(DrugListFragment.ARG_CATEGORY_ID, category.getId());
+                    args.putString(DrugListFragment.ARG_CATEGORY_NAME,
+                            category.getName() == null ? "" : category.getName());
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.drugListFragment, args);
+                })
                 .show();
     }
 

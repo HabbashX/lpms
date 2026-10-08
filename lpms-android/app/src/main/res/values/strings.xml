@@ -340,6 +340,11 @@
     <string name="settings_help">These values apply to the whole pharmacy. Each change is recorded in the audit log.</string>
     <string name="settings_saved">Settings saved</string>
     <string name="settings_nothing_to_save">Nothing has changed</string>
+    <!-- Category delete conflict and the way out of it -->
+    <string name="error_category_in_use">This category is used by drugs and cannot be deleted</string>
+    <string name="category_in_use_title">Category in use</string>
+    <string name="category_in_use_body">Drugs still use the category %1$s. Move them to another category, then delete it.</string>
+    <string name="category_view_drugs">View drugs</string>
     <string name="sales_title">Sales</string>
     <string name="sales_empty">No sales yet</string>
     <string name="sales_empty_filtered">No sales match these filters</string>

@@ -1,6 +1,7 @@
 package com.lpms.ui.categories;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.lpms.R;
 import com.lpms.core.error.ApiError;
@@ -37,6 +38,17 @@ public final class CategoriesViewModel extends ViewModel {
     private final MutableLiveData<Boolean> busy = new MutableLiveData<>(false);
     private final MutableLiveData<FormError> message = new MutableLiveData<>();
 
+    /**
+     * Set when a delete was refused with CATEGORY_IN_USE, holding the category that blocked
+     * it. Without this the user is told the category is in use and given nothing to do about
+     * it; with it the screen can list the drugs that have to be moved first.
+     */
+    private final MutableLiveData<CategoryResponse> blockedBy = new MutableLiveData<>();
+
+    /** The category whose delete is currently in flight, so a 409 can be attributed. */
+    @Nullable
+    private CategoryResponse pendingDelete;
+
     @Inject
     public CategoriesViewModel(@NonNull CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
@@ -55,6 +67,12 @@ public final class CategoriesViewModel extends ViewModel {
     @NonNull
     public LiveData<FormError> message() {
         return message;
+    }
+
+    /** Emits the category whose delete was refused because drugs still reference it. */
+    @NonNull
+    public LiveData<CategoryResponse> blockedBy() {
+        return blockedBy;
     }
 
     public void load() {
@@ -119,11 +137,13 @@ public final class CategoriesViewModel extends ViewModel {
             return;
         }
         busy.setValue(true);
+        pendingDelete = category;
         disposables.add(categoryRepository.delete(category.getId())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         () -> {
                             busy.setValue(false);
+                            pendingDelete = null;
                             fetch();
                         },
                         throwable -> onWriteFailed(throwable)));
@@ -132,6 +152,16 @@ public final class CategoriesViewModel extends ViewModel {
     private void onWriteFailed(@NonNull Throwable throwable) {
         busy.setValue(false);
         ApiError error = NetworkCall.asApiError(throwable);
+
+        // 409: the backend will not orphan a drug's category, which is correct. Report which
+        // category blocked it so the screen can show the drugs that have to move first.
+        if (isInUse(error) && pendingDelete != null) {
+            blockedBy.setValue(pendingDelete);
+            pendingDelete = null;
+            return;
+        }
+        pendingDelete = null;
+
         String nameMessage = error.messageFor("name");
         if (nameMessage != null) {
             message.setValue(FormError.of(nameMessage));

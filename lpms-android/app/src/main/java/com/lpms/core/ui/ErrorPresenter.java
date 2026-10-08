@@ -84,6 +84,12 @@ public final class ErrorPresenter {
         if (ApiErrorCodes.NOT_FOUND.equals(code)) {
             return R.string.error_not_found;
         }
+        // Without this the 409 falls through to a generic failure, which tells the user
+        // nothing about what to change. The blocking drug list is reachable from the
+        // category screen, so this error has a way out.
+        if (ApiErrorCodes.CATEGORY_IN_USE.equals(code)) {
+            return R.string.error_category_in_use;
+        }
         if (ApiErrorCodes.RATE_LIMITED.equals(code)) {
             return R.string.error_rate_limited;
         }

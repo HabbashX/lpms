@@ -186,10 +186,22 @@
         android:name="com.lpms.ui.users.UserFormFragment"
         android:label="@string/user_add_title">
 
-        <argument
-            android:name="userId"
+<argument
+            android:name="drugId"
             android:defaultValue="0L"
             app:argType="long" />
+
+        <!-- Set by the category screen when a delete was refused as CATEGORY_IN_USE. -->
+        <argument
+            android:name="categoryId"
+            android:defaultValue="0L"
+            app:argType="long" />
+
+        <argument
+            android:name="categoryName"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </fragment>
 
     <!-- Audit log: read-only. ADMIN only. -->

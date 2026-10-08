@@ -230,6 +230,12 @@
     <string name="stock_expiring_soon">قارب على الانتهاء</string>
     <string name="sales_title">المبيعات</string>
 
+    <!-- Category delete conflict and the way out of it -->
+    <string name="error_category_in_use">هذه الفئة مستخدمة في أدوية ولا يمكن حذفها</string>
+    <string name="category_in_use_title">الفئة مستخدمة</string>
+    <string name="category_in_use_body">لا تزال هناك أدوية تستخدم الفئة %1$s. انقلها إلى فئة أخرى ثم احذف الفئة.</string>
+    <string name="category_view_drugs">عرض الأدوية</string>
+
     <!-- Reports, users, audit and settings -->
     <string name="nav_audit_log">سجل التدقيق</string>
     <string name="reports_title">التقارير</string>
