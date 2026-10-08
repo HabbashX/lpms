@@ -70,6 +70,7 @@ public final class DrugListFragment extends Fragment implements DrugsAdapter.Lis
         setUpList();
         setUpSearch();
         setUpFilterChips();
+        applyIncomingCategoryFilter();
         binding.emptyStateAction.setOnClickListener(v -> viewModel.loadFirstPage());
 
         binding.swipeRefresh.setOnRefreshListener(viewModel::refresh);
@@ -94,6 +95,30 @@ public final class DrugListFragment extends Fragment implements DrugsAdapter.Lis
         });
 
         viewModel.loadCategories();
+    }
+
+    /**
+     * Honours a category passed in by the category screen.
+     *
+     * <p>Set before the first page loads, so the list arrives already filtered rather than
+     * flashing every drug and then narrowing. The chip shows the category name from the
+     * argument, which avoids waiting for the category cache before anything is readable.
+     * </p>
+     */
+    private void applyIncomingCategoryFilter() {
+        Bundle args = getArguments();
+        if (args == null) {
+            return;
+        }
+        long categoryId = args.getLong(ARG_CATEGORY_ID, 0L);
+        if (categoryId <= 0L) {
+            return;
+        }
+        String name = args.getString(ARG_CATEGORY_NAME, "");
+        viewModel.setCategory(categoryId);
+        binding.chipCategory.setText(name == null || name.trim().isEmpty()
+                ? getString(R.string.drugs_filter_category) : name.trim());
+        binding.chipClear.setVisibility(View.VISIBLE);
     }
 
     private void setUpToolbar() {
@@ -121,7 +146,7 @@ public final class DrugListFragment extends Fragment implements DrugsAdapter.Lis
     }
 
     private void setUpList() {
-        adapter = new DrugsAdapter(this, currencySymbol);
+        adapter = new DrugsAdapter(this, currencySymbol, viewModel.canManageCatalog());
         binding.list.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.list.setAdapter(adapter);
         binding.list.addItemDecoration(
@@ -468,6 +493,14 @@ public final class DrugListFragment extends Fragment implements DrugsAdapter.Lis
      * Matches the {@code drugId} argument in the nav graph; 0 means none.
      */
     public static final String ARG_DRUG_ID = "drugId";
+
+    /**
+     * Opens the list already filtered to one category. The category screen sets these when
+     * a delete was refused because drugs still reference it, so the user lands on exactly
+     * the drugs that have to be moved.
+     */
+    public static final String ARG_CATEGORY_ID = "categoryId";
+    public static final String ARG_CATEGORY_NAME = "categoryName";
 
     /** Rows from the end that trigger the next page request. */
     private static final int PREFETCH_DISTANCE = 6;

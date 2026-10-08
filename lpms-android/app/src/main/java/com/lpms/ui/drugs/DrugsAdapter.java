@@ -34,11 +34,20 @@ public final class DrugsAdapter extends ListAdapter<DrugResponse, DrugsAdapter.V
 
     private final Listener listener;
     private final String currencySymbol;
+    private final boolean canManageCatalog;
 
-    public DrugsAdapter(@NonNull Listener listener, @NonNull String currencySymbol) {
+    /**
+     * @param canManageCatalog whether this role may edit, deactivate, price or receive stock
+     *     for a drug. When false the row overflow button is hidden: it used to be shown to
+     *     everyone, and tapping it for an employee opened an empty menu, which read as a
+     *     broken delete button rather than a permission boundary.
+     */
+    public DrugsAdapter(@NonNull Listener listener, @NonNull String currencySymbol,
+                        boolean canManageCatalog) {
         super(DIFF);
         this.listener = listener;
         this.currencySymbol = currencySymbol;
+        this.canManageCatalog = canManageCatalog;
         setHasStableIds(false);
     }
 
@@ -53,7 +62,7 @@ public final class DrugsAdapter extends ListAdapter<DrugResponse, DrugsAdapter.V
             holder.clear();
             return;
         }
-        holder.bind(drug, listener, currencySymbol);
+        holder.bind(drug, listener, currencySymbol, canManageCatalog);
     }
 
     @NonNull
@@ -83,7 +92,8 @@ public final class DrugsAdapter extends ListAdapter<DrugResponse, DrugsAdapter.V
 
         void bind(@NonNull DrugResponse drug,
                   @NonNull Listener listener,
-                  @NonNull String currencySymbol) {
+                  @NonNull String currencySymbol,
+                  boolean canManageCatalog) {
             binding.name.setText(drug.displayName());
 
             String generic = drug.getGenericName();
@@ -130,7 +140,13 @@ public final class DrugsAdapter extends ListAdapter<DrugResponse, DrugsAdapter.V
             }
 
             binding.getRoot().setOnClickListener(v -> listener.onDrugClicked(drug));
-            binding.menu.setOnClickListener(v -> listener.onDrugMenuClicked(drug, v));
+
+            // No actions for this role, so no button. An empty menu reads as a broken
+            // delete button rather than as a permission boundary.
+            binding.menu.setVisibility(canManageCatalog ? View.VISIBLE : View.GONE);
+            binding.menu.setOnClickListener(canManageCatalog
+                    ? v -> listener.onDrugMenuClicked(drug, v)
+                    : null);
         }
     }
 
