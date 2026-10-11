@@ -446,7 +446,7 @@
     <string name="stock_selected_drug">%1$s · %2$d in stock</string>
     <string name="stock_section_purchase">Purchase details</string>
     <string name="stock_quantity">Quantity</string>
-    <string name="stock_unit_price">Purchase price</string>
+    <string name="stock_unit_price">Unit purchase price</string>
     <string name="stock_supplier">Supplier</string>
     <string name="stock_batch_number">Batch number</string>
     <string name="stock_expiration">Expiry date</string>
@@ -465,7 +465,7 @@
     <string name="stock_pick_drug_first">Pick a drug first</string>
     <string name="stock_drug_inactive">This drug is inactive and cannot receive stock</string>
     <string name="stock_error_quantity">Enter a whole quantity greater than zero</string>
-    <string name="stock_error_unit_price">Enter a purchase price greater than zero</string>
+    <string name="stock_error_unit_price">Enter the purchase price for a single unit</string>
     <string name="stock_error_expiry_format">Use the format yyyy-MM-dd</string>
     <string name="stock_error_expiry_past">The expiry date cannot be in the past</string>
     <string name="stock_error_selling_price">Enter the new selling price</string>
