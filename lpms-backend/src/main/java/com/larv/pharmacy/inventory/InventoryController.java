@@ -78,15 +78,20 @@ public class InventoryController {
     }
 
     @GetMapping("/drugs/{drugId}/pricing")
-    @Operation(summary = "Weighted-average cost, current profit and suggested selling price (ADMIN/PHARMACIST)",
-            description = "Average cost is quantity-weighted over all remaining batches. "
-                    + "Pass profitPerUnit (cost + profit) or marginPercent (profit as % of price) to get "
-                    + "suggestedSellingPrice; passing both is rejected.")
-    public DrugPricingResponse pricing(@PathVariable Long drugId,
-                                       @RequestParam(required = false) java.math.BigDecimal profitPerUnit,
-                                       @RequestParam(required = false) java.math.BigDecimal marginPercent) {
-        return inventoryService.pricing(drugId, profitPerUnit, marginPercent);
-    }
+     @Operation(summary = "Weighted-average cost, current profit and suggested selling price (ADMIN/PHARMACIST)",
+     description = "Average cost is quantity-weighted over all remaining batches. "
+     + "Pass profitPerUnit (cost + profit) or marginPercent (profit as % of price) to get "
+     + "suggestedSellingPrice; passing both is rejected. "
+     + "Pass incomingQuantity with incomingUnitCost to preview the average a stock "
+     + "receipt would produce, so the figure matches what saving will store.")
+     public DrugPricingResponse pricing(@PathVariable Long drugId,
+     @RequestParam(required = false) java.math.BigDecimal profitPerUnit,
+     @RequestParam(required = false) java.math.BigDecimal marginPercent,
+     @RequestParam(required = false) Integer incomingQuantity,
+     @RequestParam(required = false) java.math.BigDecimal incomingUnitCost) {
+     return inventoryService.pricing(drugId, profitPerUnit, marginPercent,
+     incomingQuantity, incomingUnitCost);
+     }
 
     @GetMapping("/low-stock")
     @Operation(summary = "Drugs at or below their minimum stock level")

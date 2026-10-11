@@ -68,11 +68,30 @@ public final class InventoryRepository {
                                               @NonNull PricingMode mode,
                                               @Nullable BigDecimal profitPerUnit,
                                               @Nullable BigDecimal marginPercent) {
+        return pricing(drugId, mode, profitPerUnit, marginPercent, null, null);
+    }
+
+    /**
+     * Pricing preview that can include stock not yet received.
+     *
+     * <p>Pass both {@code incomingQuantity} and {@code incomingUnitCost} to fold a pending
+     * receipt into the weighted average. Without them the average covers only stock already
+     * in the database, which is not the cost the drug will actually carry once saved.</p>
+     */
+    @NonNull
+    public Single<DrugPricingResponse> pricing(long drugId,
+                                              @NonNull PricingMode mode,
+                                              @Nullable BigDecimal profitPerUnit,
+                                              @Nullable BigDecimal marginPercent,
+                                              @Nullable Integer incomingQuantity,
+                                              @Nullable BigDecimal incomingUnitCost) {
         String profit = mode == PricingMode.PROFIT_PER_UNIT
                 ? com.lpms.core.util.Money.toPlainString(profitPerUnit) : null;
         String margin = mode == PricingMode.MARGIN_PERCENT
                 ? com.lpms.core.util.Money.toPlainString(marginPercent) : null;
-        return inventoryApi.pricing(drugId, profit, margin)
+        String incomingCost = incomingUnitCost == null ? null
+                : com.lpms.core.util.Money.toPlainString(incomingUnitCost);
+        return inventoryApi.pricing(drugId, profit, margin, incomingQuantity, incomingCost)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
                 .subscribeOn(Schedulers.io());

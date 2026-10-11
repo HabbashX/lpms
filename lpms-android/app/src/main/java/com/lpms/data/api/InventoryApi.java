@@ -71,11 +71,17 @@ public interface InventoryApi {
      * 400 {@code INVALID_PRICING} and a margin outside {@code 0 â‰¤ m < 100} is 400
      * {@code INVALID_MARGIN}. The response's {@code suggestedSellingPrice} is only
      * populated when one of them was sent.
+     *
+     * <p>Pass {@code incomingQuantity} with {@code incomingUnitCost} to preview the average
+     * a stock receipt would produce, so the suggested price matches what saving will store.
+     * Without them the average covers only stock already received.</p>
      */
     @GET("api/v1/inventory/drugs/{drugId}/pricing")
     Single<DrugPricingResponse> pricing(@Path("drugId") long drugId,
                                         @Nullable @Query("profitPerUnit") String profitPerUnit,
-                                        @Nullable @Query("marginPercent") String marginPercent);
+                                        @Nullable @Query("marginPercent") String marginPercent,
+                                        @Nullable @Query("incomingQuantity") Integer incomingQuantity,
+                                        @Nullable @Query("incomingUnitCost") String incomingUnitCost);
 
     @GET("api/v1/inventory/low-stock")
     Call<PageResponse<LowStockDrugResponse>> lowStock(@Nullable @Query("search") String search,

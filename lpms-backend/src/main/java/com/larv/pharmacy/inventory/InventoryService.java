@@ -131,7 +131,8 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public DrugPricingResponse pricing(Long drugId, BigDecimal profitPerUnit, BigDecimal marginPercent) {
+    public DrugPricingResponse pricing(Long drugId, BigDecimal profitPerUnit, BigDecimal marginPercent,
+                                       Integer incomingQuantity, BigDecimal incomingUnitCost) {
         if (profitPerUnit != null && marginPercent != null) {
             throw new InvalidRequestException("INVALID_PRICING",
                     "Provide either profitPerUnit or marginPercent, not both");
@@ -139,25 +140,46 @@ public class InventoryService {
         if (profitPerUnit != null && profitPerUnit.signum() < 0) {
             throw new InvalidRequestException("INVALID_PRICING", "profitPerUnit must not be negative");
         }
+        boolean hasIncoming = incomingQuantity != null && incomingUnitCost != null;
+        if (hasIncoming && (incomingQuantity <= 0 || incomingUnitCost.signum() < 0)) {
+            throw new InvalidRequestException("INVALID_PRICING",
+                    "incomingQuantity must be positive and incomingUnitCost must not be negative");
+        }
         Drug drug = drugRepository.findById(drugId).orElseThrow(() -> new DrugNotFoundException(drugId));
         List<StockBatch> batches = stockBatchRepository.findRemainingByDrug(drugId);
         CostBasis basis = costBasis(batches);
-        BigDecimal cost = basis.weightedAverageCost();
+
+        // Fold the stock being received into the average, so the preview shows the cost the
+        // batch will actually produce. recordPurchase saves the batch first and then prices
+        // from findRemainingByDrug, so previewing on the stock already in the database
+        // would quote a figure the save then contradicts.
+        int effectiveQuantity = basis.totalQuantity();
+        BigDecimal effectiveTotalCost = basis.totalInventoryCost();
+        if (hasIncoming) {
+            effectiveQuantity += incomingQuantity;
+            effectiveTotalCost = effectiveTotalCost.add(
+                    MoneyUtil.multiply(incomingUnitCost, incomingQuantity));
+        }
+        BigDecimal cost = effectiveQuantity > 0
+                ? effectiveTotalCost.divide(BigDecimal.valueOf(effectiveQuantity),
+                        MoneyUtil.UNIT_COST_SCALE, MoneyUtil.ROUNDING)
+                : BigDecimal.ZERO.setScale(MoneyUtil.UNIT_COST_SCALE);
+
         BigDecimal price = drug.getSellingPrice();
 
         BigDecimal profit = null;
         BigDecimal margin = null;
         BigDecimal markup = null;
         BigDecimal totalProfit = null;
-        if (price != null && basis.totalQuantity() > 0) {
+        if (price != null && effectiveQuantity > 0) {
             BigDecimal unitProfit = price.subtract(cost);
             profit = MoneyUtil.round2(unitProfit);
             margin = PricingCalculator.marginPercent(cost, price);
             markup = PricingCalculator.markupPercent(cost, price);
-            totalProfit = MoneyUtil.round2(unitProfit.multiply(BigDecimal.valueOf(basis.totalQuantity())));
+            totalProfit = MoneyUtil.round2(unitProfit.multiply(BigDecimal.valueOf(effectiveQuantity)));
         }
         BigDecimal suggested = null;
-        if (basis.totalQuantity() > 0) {
+        if (effectiveQuantity > 0) {
             if (profitPerUnit != null) {
                 suggested = PricingCalculator.priceForProfit(cost, profitPerUnit);
             } else if (marginPercent != null) {
@@ -171,8 +193,8 @@ public class InventoryService {
         return new DrugPricingResponse(
                 drug.getId(),
                 drug.getName(),
-                basis.totalQuantity(),
-                MoneyUtil.round2(basis.totalInventoryCost()),
+                effectiveQuantity,
+                MoneyUtil.round2(effectiveTotalCost),
                 MoneyUtil.round2(cost),
                 price == null ? null : MoneyUtil.round2(price),
                 profit, margin, markup, totalProfit, suggested, batchCosts);

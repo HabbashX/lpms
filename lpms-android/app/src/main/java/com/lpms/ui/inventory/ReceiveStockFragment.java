@@ -122,6 +122,38 @@ public final class ReceiveStockFragment extends Fragment {
             }
         });
 
+        // Quantity and purchase price both change the projected weighted average, so the
+        // preview has to follow them too - not just the profit field.
+        binding.quantity.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                viewModel.onQuantityChanged(text(binding.quantity));
+            }
+        });
+
+        binding.unitPrice.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                viewModel.onPurchasePriceChanged(text(binding.unitPrice));
+            }
+        });
+
         binding.saveButton.setOnClickListener(v -> submit());
 
         viewModel.drugResults().observe(getViewLifecycleOwner(), results -> {

@@ -205,6 +205,8 @@ public final class ReceiveStockViewModel extends ViewModel {
         lastProfitPerUnit = null;
         previewedBasePosition = false;
         previewedProfitPerUnit = null;
+        previewedIncomingQuantity = null;
+        previewedIncomingUnitCost = null;
         lastPreviewedDrugId = null;
         loadPosition(null);
     }
@@ -251,21 +253,59 @@ public final class ReceiveStockViewModel extends ViewModel {
         loadPosition(parsed);
     }
 
+    /** Quantity being received; feeds the projected weighted average. */
+    public void onQuantityChanged(@Nullable String quantityText) {
+        Integer parsed = null;
+        if (quantityText != null) {
+            try {
+                int value = Integer.parseInt(quantityText.trim());
+                parsed = value > 0 ? value : null;
+            } catch (NumberFormatException ignored) {
+                parsed = null;
+            }
+        }
+        if (Objects.equals(parsed, incomingQuantity)) {
+            return;
+        }
+        incomingQuantity = parsed;
+        loadPosition(lastProfitPerUnit);
+    }
+
+    /** Unit purchase price of the incoming batch; feeds the projected weighted average. */
+    public void onPurchasePriceChanged(@Nullable String priceText) {
+        BigDecimal parsed = Money.parsePositive(priceText);
+        if (parsed != null && parsed.signum() <= 0) {
+            parsed = null;
+        }
+        if (Objects.equals(parsed, incomingUnitCost)) {
+            return;
+        }
+        incomingUnitCost = parsed;
+        loadPosition(lastProfitPerUnit);
+    }
+
     @Nullable
     private BigDecimal lastProfitPerUnit;
+
+    /** The previewed question, so an identical one is not re-requested. */
+    @Nullable
+    private BigDecimal previewedIncomingUnitCost;
+    @Nullable
+    private Integer previewedIncomingQuantity;
+
+    /**
+     * The stock being received right now. Both are needed before the average means anything:
+     * a new batch changes the weighted cost in proportion to its size and price, so a
+     * preview without them quotes the average of the stock that was already there.
+     */
+    @Nullable
+    private Integer incomingQuantity;
+    @Nullable
+    private BigDecimal incomingUnitCost;
 
     private void loadPosition(@Nullable BigDecimal profitPerUnit) {
         DrugResponse drug = selectedDrug.getValue();
         if (drug == null || drug.getId() == null) {
-            return;
-        }
-
-        // Identical question already answered or on its way: do not ask again. Without this
-        // a re-render of the same values produced a request per frame.
-        if (profitPerUnit == null && previewedBasePosition) {
-            return;
-        }
-        if (profitPerUnit != null && Objects.equals(profitPerUnit, previewedProfitPerUnit)) {
             return;
         }
 
@@ -275,17 +315,33 @@ public final class ReceiveStockViewModel extends ViewModel {
         if (!Objects.equals(lastPreviewedDrugId, id)) {
             previewedBasePosition = false;
             previewedProfitPerUnit = null;
+            previewedIncomingQuantity = null;
+            previewedIncomingUnitCost = null;
             lastPreviewedDrugId = id;
+        }
+
+        // The whole question is profit plus the batch being received. If exactly this was
+        // already answered or is on its way, do not ask again - otherwise a re-render of
+        // unchanged values produced a request per frame.
+        boolean sameQuestion = Objects.equals(profitPerUnit, previewedProfitPerUnit)
+                && Objects.equals(incomingQuantity, previewedIncomingQuantity)
+                && Objects.equals(incomingUnitCost, previewedIncomingUnitCost);
+        if (sameQuestion && (profitPerUnit == null ? previewedBasePosition
+                : previewedProfitPerUnit != null)) {
+            return;
         }
 
         previewedBasePosition = profitPerUnit == null;
         previewedProfitPerUnit = profitPerUnit;
+        previewedIncomingQuantity = incomingQuantity;
+        previewedIncomingUnitCost = incomingUnitCost;
 
         Single<DrugPricingResponse> call = inventoryRepository.pricing(id,
                 profitPerUnit == null
                         ? InventoryRepository.PricingMode.NONE
                         : InventoryRepository.PricingMode.PROFIT_PER_UNIT,
-                profitPerUnit, null);
+                profitPerUnit, null,
+                incomingQuantity, incomingUnitCost);
 
         // Cancel whatever is outstanding: only the newest question is worth answering.
         if (previewRequest != null) {
