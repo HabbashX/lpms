@@ -2,7 +2,9 @@ package com.lpms;
 
 import android.app.Application;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 
 import com.lpms.core.auth.SessionManager;
 import com.lpms.core.util.AppPreferences;
@@ -32,6 +34,7 @@ public class LpmsApplication extends Application {
     public void onCreate() {
         super.onCreate();
         applyTheme(preferences.themeMode());
+        applyLanguage(preferences.languageTag());
         sessionManager.restore();
     }
 
@@ -43,5 +46,22 @@ public class LpmsApplication extends Application {
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
+    }
+
+    /**
+     * Restores the chosen language before any Activity exists.
+     *
+     * <p>Done here rather than by AppCompat's automatic storage so the tag lives in one
+     * place ({@link AppPreferences}) and a cleared preference reliably means "follow the
+     * device" instead of silently keeping a locale the user can no longer see.</p>
+     */
+    private static void applyLanguage(@Nullable String tag) {
+        if (tag == null || tag.trim().isEmpty()) {
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList());
+            return;
+        }
+        // Stored as a plain tag so it stays readable and comparable in preferences.
+        AppCompatDelegate.setApplicationLocales(
+                LocaleListCompat.forLanguageTags(tag.trim()));
     }
 }

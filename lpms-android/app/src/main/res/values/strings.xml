@@ -80,6 +80,17 @@
     <string name="nav_users">Users</string>
     <string name="nav_audit">Audit log</string>
     <string name="nav_settings">Settings</string>
+  <!-- Device preferences: language and theme (separate from pharmacy settings) -->
+  <string name="nav_preferences">Language &amp; theme</string>
+  <string name="preferences_title">Language &amp; theme</string>
+  <string name="preferences_language">Language</string>
+  <string name="preferences_language_system">System default</string>
+  <string name="preferences_language_english">English</string>
+  <string name="preferences_language_arabic">العربية</string>
+  <string name="preferences_theme">Theme</string>
+  <string name="preferences_theme_system">Follow system</string>
+  <string name="preferences_theme_light">Light</string>
+  <string name="preferences_theme_dark">Dark</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_low_stock">Low stock</string>
     <string name="nav_expiring">Expiring soon</string>

@@ -108,10 +108,15 @@ public final class MoreFragment extends Fragment {
             addRow(R.drawable.ic_audit, R.string.nav_audit_log,
                     () -> NavHostFragment.findNavController(this)
                             .navigate(R.id.auditListFragment));
-            addRow(R.drawable.ic_settings, R.string.nav_settings,
-                    () -> NavHostFragment.findNavController(this)
-                            .navigate(R.id.settingsFragment));
-        }
+addRow(R.drawable.ic_settings, R.string.nav_settings,
+        () -> NavHostFragment.findNavController(this)
+        .navigate(R.id.settingsFragment));
+        // Language and theme belong to the handset, so they sit beside the server-backed
+        // pharmacy settings rather than inside a screen that is rebuilt from the API.
+        addRow(R.drawable.ic_nav_profile, R.string.nav_preferences,
+        () -> NavHostFragment.findNavController(this)
+        .navigate(R.id.preferencesFragment));
+    }
 
         addRow(R.drawable.ic_nav_profile, R.string.more_change_password,
                 () -> NavHostFragment.findNavController(this)

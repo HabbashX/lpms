@@ -434,4 +434,15 @@
     <string name="stock_error_expiry_past">لا يمكن أن يكون تاريخ الانتهاء في الماضي</string>
     <string name="stock_error_selling_price">أدخل سعر البيع الجديد</string>
     <string name="stock_error_profit">أدخل ربحًا لكل وحدة</string>
+<!-- إعدادات الجهاز: اللغة والمظهر -->
+  <string name="nav_preferences">اللغة والمظهر</string>
+  <string name="preferences_title">اللغة والمظهر</string>
+  <string name="preferences_language">اللغة</string>
+  <string name="preferences_language_system">لغة النظام</string>
+  <string name="preferences_language_english">English</string>
+  <string name="preferences_language_arabic">العربية</string>
+  <string name="preferences_theme">المظهر</string>
+  <string name="preferences_theme_system">حسب النظام</string>
+  <string name="preferences_theme_light">فاتح</string>
+  <string name="preferences_theme_dark">داكن</string>
 </resources>

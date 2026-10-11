@@ -213,8 +213,17 @@
     <!-- Pharmacy settings. ADMIN only. -->
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.lpms.ui.settings.SettingsFragment"
-        android:label="@string/nav_settings" />
+android:name="com.lpms.ui.settings.SettingsFragment"
+    android:label="@string/nav_settings" />
+
+    <!--
+    Device preferences, not pharmacy settings. Language and theme belong to the handset and
+    work offline, so they are kept out of the server-driven settings screen above.
+    -->
+    <fragment
+        android:id="@+id/preferencesFragment"
+        android:name="com.lpms.ui.settings.PreferencesFragment"
+        android:label="@string/preferences_title" />
 
     <!--
       Inventory. Batches, low stock, expiring batches and valuation are chips on one screen
