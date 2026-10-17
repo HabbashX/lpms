@@ -5,7 +5,10 @@ import androidx.annotation.Nullable;
 
 import com.lpms.core.error.ApiErrorMapper;
 import com.lpms.core.network.PageablePagingSource;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.AuditApi;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 import com.lpms.data.dto.AuditLogResponse;
 import com.lpms.data.dto.PageResponse;
 
@@ -26,10 +29,16 @@ import retrofit2.Call;
 public final class AuditRepository {
 
     private final AuditApi auditApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public AuditRepository(@NonNull AuditApi auditApi) {
+    public AuditRepository(@NonNull AuditApi auditApi,
+                  @NonNull LocalBackend localBackend,
+                  @NonNull AppPreferences preferences) {
         this.auditApi = auditApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /** Immutable filter; every field is optional and the server treats null as "any". */
@@ -127,6 +136,10 @@ public final class AuditRepository {
     @NonNull
     public PageablePagingSource<AuditLogResponse> paging(@NonNull Filter filter,
                                                         @NonNull ApiErrorMapper errorMapper) {
+        if (preferences.isOffline()) {
+            // No local audit table: the preview shows an empty log rather than inventing one.
+            return new LocalPagingSource<>(localBackend.auditLogs(), errorMapper);
+        }
         return new AuditPagingSource(filter, errorMapper);
     }
 }

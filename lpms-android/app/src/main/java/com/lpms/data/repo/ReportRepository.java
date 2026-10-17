@@ -6,7 +6,10 @@ import androidx.annotation.Nullable;
 import com.lpms.core.error.ApiErrorMapper;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.ReportApi;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 import com.lpms.data.dto.DailyProfitResponse;
 import com.lpms.data.dto.MonthlyProfitResponse;
 import com.lpms.data.dto.PageResponse;
@@ -39,10 +42,16 @@ import retrofit2.Call;
 public final class ReportRepository {
 
     private final ReportApi reportApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public ReportRepository(@NonNull ReportApi reportApi) {
+    public ReportRepository(@NonNull ReportApi reportApi,
+                  @NonNull LocalBackend localBackend,
+                  @NonNull AppPreferences preferences) {
         this.reportApi = reportApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /** Named range (today, last month, …) or an explicit from/to pair. */
@@ -50,6 +59,19 @@ public final class ReportRepository {
     public Single<ProfitReportResponse> range(@Nullable ProfitPreset preset,
                                               @Nullable LocalDate from,
                                               @Nullable LocalDate to) {
+        if (preferences.isOffline()) {
+            ProfitPreset.DateRange offlineRange = resolve(
+                    preset == null ? ProfitPreset.DEFAULT : preset);
+            LocalDate start = from != null ? from : offlineRange.getFrom();
+            LocalDate end = to != null ? to : offlineRange.getTo();
+            if (start == null) {
+                start = LocalDate.now();
+            }
+            if (end == null) {
+                end = LocalDate.now();
+            }
+            return localBackend.profitReport(start, end);
+        }
         Single<ProfitReportResponse> call = preset != null
                 ? reportApi.profit(preset.wireValue(), null, null)
                 : reportApi.profit(null, from, to);
@@ -67,6 +89,9 @@ public final class ReportRepository {
 
     @NonNull
     public Single<ProfitReportResponse> daily(@NonNull LocalDate date) {
+        if (preferences.isOffline()) {
+            return localBackend.profitReport(date, date);
+        }
         return reportApi.daily(date)
                 .map(DailyProfitResponse::asRange)
                 .onErrorResumeNext(error -> Single.error(
@@ -76,6 +101,10 @@ public final class ReportRepository {
 
     @NonNull
     public Single<ProfitReportResponse> weekly(@NonNull LocalDate anyDayInWeek) {
+        if (preferences.isOffline()) {
+            LocalDate monday = anyDayInWeek.with(java.time.DayOfWeek.MONDAY);
+            return localBackend.profitReport(monday, monday.plusDays(6));
+        }
         return reportApi.weekly(anyDayInWeek)
                 .map(WeeklyProfitResponse::asRange)
                 .onErrorResumeNext(error -> Single.error(
@@ -85,6 +114,10 @@ public final class ReportRepository {
 
     @NonNull
     public Single<ProfitReportResponse> monthly(int year, int month) {
+        if (preferences.isOffline()) {
+            LocalDate first = LocalDate.of(year, month, 1);
+            return localBackend.profitReport(first, first.withDayOfMonth(first.lengthOfMonth()));
+        }
         return reportApi.monthly(year, month)
                 .map(MonthlyProfitResponse::asRange)
                 .onErrorResumeNext(error -> Single.error(
@@ -105,6 +138,9 @@ public final class ReportRepository {
                                                              @Nullable String paymentMethod,
                                                              @Nullable Long customerId,
                                                              @NonNull ApiErrorMapper errorMapper) {
+        if (preferences.isOffline()) {
+            return new LocalPagingSource<>(localBackend.profitDetails(from, to), errorMapper);
+        }
         return new DetailsPagingSource(from, to, drugId, categoryId, employeeId, paymentMethod,
                 customerId, errorMapper);
     }

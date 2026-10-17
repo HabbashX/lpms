@@ -4,7 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.lpms.core.network.NetworkCall;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.SettingsApi;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 import com.lpms.data.dto.SettingResponse;
 import com.lpms.data.dto.UpdateSettingsRequest;
 
@@ -32,14 +35,25 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public final class SettingsRepository {
 
     private final SettingsApi settingsApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public SettingsRepository(@NonNull SettingsApi settingsApi) {
+    public SettingsRepository(@NonNull SettingsApi settingsApi,
+                  @NonNull LocalBackend localBackend,
+                  @NonNull AppPreferences preferences) {
         this.settingsApi = settingsApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     @NonNull
     public Single<List<SettingResponse>> getAll() {
+        if (preferences.isOffline()) {
+            // Pharmacy settings are server rules; offline shows none rather than guessing
+            // at defaults that would silently change how the preview behaves.
+            return localBackend.settings();
+        }
         return settingsApi.getAll()
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -49,6 +63,9 @@ public final class SettingsRepository {
     /** Sends only the changed keys; an empty map is refused rather than sent. */
     @NonNull
     public Single<List<SettingResponse>> update(@NonNull Map<String, String> changes) {
+        if (preferences.isOffline()) {
+            return localBackend.settings();
+        }
         if (changes.isEmpty()) {
             return Single.error(new IllegalArgumentException("no settings changed"));
         }

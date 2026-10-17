@@ -5,9 +5,11 @@ import androidx.annotation.Nullable;
 
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.ui.UiState;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.CategoryApi;
 import com.lpms.data.dto.CategoryRequest;
 import com.lpms.data.dto.CategoryResponse;
+import com.lpms.local.LocalBackend;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +32,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public final class CategoryRepository {
 
     private final CategoryApi categoryApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     /** Guarded by {@code this}; null means "not loaded yet". */
     @Nullable
@@ -40,13 +44,23 @@ public final class CategoryRepository {
     private volatile Single<List<CategoryResponse>> inFlight;
 
     @Inject
-    public CategoryRepository(@NonNull CategoryApi categoryApi) {
+    public CategoryRepository(@NonNull CategoryApi categoryApi,
+                              @NonNull LocalBackend localBackend,
+                              @NonNull AppPreferences preferences) {
         this.categoryApi = categoryApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /** Cached list when available, otherwise a fresh fetch that primes the cache. */
     @NonNull
     public Single<List<CategoryResponse>> list() {
+        // The cache is a network artifact. In offline mode the list is read straight from
+        // SQLite each time, so a write is visible immediately rather than after an explicit
+        // invalidation.
+        if (preferences.isOffline()) {
+            return localBackend.observeCategories().firstOrError();
+        }
         List<CategoryResponse> cached = cache;
         if (cached != null) {
             return Single.just(cached);
@@ -100,6 +114,9 @@ public final class CategoryRepository {
 
     @NonNull
     public Single<CategoryResponse> create(@NonNull String name) {
+        if (preferences.isOffline()) {
+            return localBackend.createCategory(name);
+        }
         return categoryApi.create(new CategoryRequest(name))
                 .doOnSuccess(this::onWrite)
                 .onErrorResumeNext(error -> Single.error(
@@ -109,6 +126,9 @@ public final class CategoryRepository {
 
     @NonNull
     public Single<CategoryResponse> rename(long id, @NonNull String name) {
+        if (preferences.isOffline()) {
+            return localBackend.renameCategory(id, name);
+        }
         return categoryApi.rename(id, new CategoryRequest(name))
                 .doOnSuccess(this::onWrite)
                 .onErrorResumeNext(error -> Single.error(
@@ -119,6 +139,9 @@ public final class CategoryRepository {
     /** 409 {@code CATEGORY_IN_USE} when any drug still references the category. */
     @NonNull
     public Completable delete(long id) {
+        if (preferences.isOffline()) {
+            return localBackend.deleteCategoryChecked(id);
+        }
         return categoryApi.delete(id)
                 .doOnComplete(this::invalidate)
                 .onErrorResumeNext(error -> Completable.error(

@@ -6,11 +6,14 @@ import androidx.annotation.Nullable;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
 import com.lpms.core.error.ApiErrorMapper;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.DrugApi;
 import com.lpms.data.dto.CreateDrugRequest;
 import com.lpms.data.dto.DrugResponse;
 import com.lpms.data.dto.PageResponse;
 import com.lpms.data.dto.UpdateDrugRequest;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,22 +40,79 @@ public final class DrugRepository {
     private static final int SEARCH_PAGE_SIZE = 20;
 
     private final DrugApi drugApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public DrugRepository(@NonNull DrugApi drugApi) {
+    public DrugRepository(@NonNull DrugApi drugApi,
+                          @NonNull LocalBackend localBackend,
+                          @NonNull AppPreferences preferences) {
         this.drugApi = drugApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /** Paging source for one immutable filter snapshot. */
     @NonNull
     public PageablePagingSource<DrugResponse> paging(@NonNull Filter filter,
                                                      @NonNull ApiErrorMapper errorMapper) {
+        if (preferences.isOffline()) {
+            // Filtered here rather than in SQL: the offline catalogue is small, and doing
+            // it in Java keeps one definition of what each filter means instead of two
+            // that can drift apart.
+            return new LocalPagingSource<>(
+                    localBackend.observeDrugs().firstOrError()
+                            .map(rows -> applyFilter(rows, filter)),
+                    errorMapper);
+        }
         return new DrugPagingSource(filter, errorMapper);
+    }
+
+    /** Applies the list filters to a locally-held catalogue. */
+    @NonNull
+    private static List<DrugResponse> applyFilter(@NonNull List<DrugResponse> rows,
+                                                  @NonNull Filter filter) {
+        String search = filter.getSearch();
+        String needle = search == null ? null : search.trim().toLowerCase(java.util.Locale.ROOT);
+        List<DrugResponse> out = new java.util.ArrayList<>();
+
+        for (DrugResponse row : rows) {
+            if (Boolean.TRUE.equals(filter.getActive()) && !row.isActive()) {
+                continue;
+            }
+            if (filter.getCategoryId() != null
+                    && !filter.getCategoryId().equals(row.getCategoryId())) {
+                continue;
+            }
+            if (filter.getLowStock() != null && filter.getLowStock() != row.isLowStock()) {
+                continue;
+            }
+            if (filter.getDosageForm() != null && !filter.getDosageForm().isEmpty()
+                    && !filter.getDosageForm().equalsIgnoreCase(row.getDosageForm())) {
+                continue;
+            }
+            if (needle != null && !needle.isEmpty()) {
+                String name = row.getName() == null ? "" : row.getName().toLowerCase(java.util.Locale.ROOT);
+                String generic = row.getGenericName() == null
+                        ? "" : row.getGenericName().toLowerCase(java.util.Locale.ROOT);
+                if (!name.contains(needle) && !generic.contains(needle)) {
+                    continue;
+                }
+            }
+            out.add(row);
+        }
+        return out;
     }
 
     /** POS scanner lookup: 404 {@code NOT_FOUND} when the barcode is unknown. */
     @NonNull
     public Single<DrugResponse> byBarcode(@NonNull String barcode) {
+        if (preferences.isOffline()) {
+            return localBackend.drugByBarcode(barcode).toSingle()
+                    .onErrorResumeNext(error -> Single.error(new com.lpms.core.error.ApiException(
+                            com.lpms.core.error.ApiError.of(404, "NOT_FOUND",
+                                    "No drug with barcode " + barcode))));
+        }
         return drugApi.byBarcode(barcode)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -65,6 +125,9 @@ public final class DrugRepository {
      */
     @NonNull
     public Single<List<DrugResponse>> byNameSearch(@NonNull String query) {
+        if (preferences.isOffline()) {
+            return localBackend.searchDrugs(query, SEARCH_PAGE_SIZE);
+        }
         Single<List<DrugResponse>> call = NetworkCall.body(
                         drugApi.list(query, null, null, Boolean.TRUE, null, null, 0,
                                 SEARCH_PAGE_SIZE, Filter.SORT_NAME_ASC),
@@ -76,6 +139,12 @@ public final class DrugRepository {
 
     @NonNull
     public Single<DrugResponse> get(long id) {
+        if (preferences.isOffline()) {
+            return localBackend.drug(id).toSingle()
+                    .onErrorResumeNext(error -> Single.error(new com.lpms.core.error.ApiException(
+                            com.lpms.core.error.ApiError.of(404, "NOT_FOUND",
+                                    "No drug " + id + " in the local database"))));
+        }
         return drugApi.get(id)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -84,6 +153,9 @@ public final class DrugRepository {
 
     @NonNull
     public Single<DrugResponse> create(@NonNull CreateDrugRequest request) {
+        if (preferences.isOffline()) {
+            return localBackend.createDrug(request);
+        }
         return drugApi.create(request)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -92,6 +164,11 @@ public final class DrugRepository {
 
     @NonNull
     public Single<DrugResponse> update(long id, @NonNull UpdateDrugRequest request) {
+        if (preferences.isOffline()) {
+            // Only the fields the app actually offers for edit are applied; the local row
+            // keeps everything else, matching the server's PATCH semantics.
+            return localBackend.updateDrug(id, request);
+        }
         return drugApi.update(id, request)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -101,6 +178,9 @@ public final class DrugRepository {
     /** Soft delete: the drug becomes inactive and keeps its history. */
     @NonNull
     public Completable deactivate(long id) {
+        if (preferences.isOffline()) {
+            return localBackend.deactivateDrug(id);
+        }
         return drugApi.deactivate(id)
                 .onErrorResumeNext(error -> Completable.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))

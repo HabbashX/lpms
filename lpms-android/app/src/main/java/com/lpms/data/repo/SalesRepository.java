@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.lpms.core.error.ApiErrorMapper;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.SalesApi;
 import com.lpms.data.dto.CreateRefundRequest;
 import com.lpms.data.dto.CreateSaleItemRequest;
@@ -15,6 +16,8 @@ import com.lpms.data.dto.PaymentMethod;
 import com.lpms.data.dto.RefundResponse;
 import com.lpms.data.dto.SaleResponse;
 import com.lpms.data.dto.TransferDetails;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -39,10 +42,16 @@ import retrofit2.Call;
 public final class SalesRepository {
 
     private final SalesApi salesApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public SalesRepository(@NonNull SalesApi salesApi) {
+    public SalesRepository(@NonNull SalesApi salesApi,
+                           @NonNull LocalBackend localBackend,
+                           @NonNull AppPreferences preferences) {
         this.salesApi = salesApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /**
@@ -200,7 +209,38 @@ public final class SalesRepository {
     @NonNull
     public PageablePagingSource<SaleResponse> paging(@NonNull Filter filter,
                                                     @NonNull ApiErrorMapper errorMapper) {
+        if (preferences.isOffline()) {
+            return new LocalPagingSource<>(
+                    localBackend.observeSales().firstOrError()
+                            .map(rows -> applyFilter(rows, filter)),
+                    errorMapper);
+        }
         return new SalePagingSource(filter, errorMapper);
+    }
+
+    /** Applies the history filters to the locally-recorded sales. */
+    @NonNull
+    private static List<SaleResponse> applyFilter(@NonNull List<SaleResponse> rows,
+                                                  @NonNull Filter filter) {
+        List<SaleResponse> out = new java.util.ArrayList<>();
+        for (SaleResponse row : rows) {
+            if (filter.getCustomerId() != null
+                    && !filter.getCustomerId().equals(row.getCustomerId())) {
+                continue;
+            }
+            String method = row.getPaymentMethod();
+            if (filter.getPaymentMethod() != null && !filter.getPaymentMethod().isEmpty()
+                    && (method == null || !filter.getPaymentMethod().equalsIgnoreCase(method))) {
+                continue;
+            }
+            com.lpms.data.dto.SaleStatus status = row.saleStatus();
+            if (filter.getStatus() != null && !filter.getStatus().isEmpty()
+                    && (status == null || !filter.getStatus().equalsIgnoreCase(status.name()))) {
+                continue;
+            }
+            out.add(row);
+        }
+        return out;
     }
 
     /**
@@ -214,6 +254,10 @@ public final class SalesRepository {
                                        @NonNull BigDecimal discount,
                                        @NonNull BigDecimal amountPaid,
                                        @Nullable TransferDetails transfer) {
+        if (preferences.isOffline()) {
+            return localBackend.recordSale(customerId, customerNameFor(customerId),
+                    paymentMethod, toLocalLines(items), discount, amountPaid);
+        }
         return salesApi.create(requestFor(customerId, paymentMethod, items, discount, amountPaid,
                 transfer))
                 .onErrorResumeNext(error -> Single.error(
@@ -221,8 +265,41 @@ public final class SalesRepository {
                 .subscribeOn(Schedulers.io());
     }
 
+    /** Translates the request lines into the local writer's shape. */
+    @NonNull
+    private static List<LocalBackend.CartLine> toLocalLines(
+            @NonNull List<CreateSaleItemRequest> items) {
+        List<LocalBackend.CartLine> out = new java.util.ArrayList<>(items.size());
+        for (CreateSaleItemRequest item : items) {
+            out.add(new LocalBackend.CartLine(item.getDrugId(),
+                    item.getQuantity() == null ? 0 : item.getQuantity(),
+                    item.getUnitSellingPrice()));
+        }
+        return out;
+    }
+
+    @Nullable
+    private String customerNameFor(@Nullable Long customerId) {
+        if (customerId == null) {
+            return null;
+        }
+        try {
+            com.lpms.data.dto.CustomerResponse customer =
+                    localBackend.customer(customerId).blockingGet();
+            return customer == null ? null : customer.getName();
+        } catch (RuntimeException missing) {
+            return null;
+        }
+    }
+
     @NonNull
     public Single<SaleResponse> get(long id) {
+        if (preferences.isOffline()) {
+            return localBackend.sale(id).toSingle()
+                    .onErrorResumeNext(error -> Single.error(new com.lpms.core.error.ApiException(
+                            com.lpms.core.error.ApiError.of(404, "NOT_FOUND",
+                                    "No sale " + id + " in the local database"))));
+        }
         return salesApi.get(id)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))

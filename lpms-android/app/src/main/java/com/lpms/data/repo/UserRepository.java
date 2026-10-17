@@ -6,7 +6,10 @@ import androidx.annotation.Nullable;
 import com.lpms.core.error.ApiErrorMapper;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.UserApi;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 import com.lpms.data.dto.CreateUserRequest;
 import com.lpms.data.dto.PageResponse;
 import com.lpms.data.dto.UpdateUserPasswordRequest;
@@ -32,10 +35,16 @@ import retrofit2.Call;
 public final class UserRepository {
 
     private final UserApi userApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public UserRepository(@NonNull UserApi userApi) {
+    public UserRepository(@NonNull UserApi userApi,
+                  @NonNull LocalBackend localBackend,
+                  @NonNull AppPreferences preferences) {
         this.userApi = userApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /** Immutable filter for the staff list. */
@@ -114,6 +123,9 @@ public final class UserRepository {
     @NonNull
     public PageablePagingSource<UserResponse> paging(@NonNull Filter filter,
                                                     @NonNull ApiErrorMapper errorMapper) {
+        if (preferences.isOffline()) {
+            return new LocalPagingSource<>(localBackend.users(), errorMapper);
+        }
         return new UserPagingSource(filter, errorMapper);
     }
 

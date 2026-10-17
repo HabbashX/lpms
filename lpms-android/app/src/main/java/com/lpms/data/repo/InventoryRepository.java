@@ -6,7 +6,10 @@ import androidx.annotation.Nullable;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
 import com.lpms.core.error.ApiErrorMapper;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.InventoryApi;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 import com.lpms.data.dto.CreatePurchaseRequest;
 import com.lpms.data.dto.DrugPricingResponse;
 import com.lpms.data.dto.DrugValuationResponse;
@@ -40,10 +43,16 @@ import retrofit2.Call;
 public final class InventoryRepository {
 
     private final InventoryApi inventoryApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public InventoryRepository(@NonNull InventoryApi inventoryApi) {
+    public InventoryRepository(@NonNull InventoryApi inventoryApi,
+                  @NonNull LocalBackend localBackend,
+                  @NonNull AppPreferences preferences) {
         this.inventoryApi = inventoryApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     /** Which what-if input the user is driving. */
@@ -91,6 +100,14 @@ public final class InventoryRepository {
                 ? com.lpms.core.util.Money.toPlainString(marginPercent) : null;
         String incomingCost = incomingUnitCost == null ? null
                 : com.lpms.core.util.Money.toPlainString(incomingUnitCost);
+        if (preferences.isOffline()) {
+            // The incoming batch is folded into the average the same way the server does
+            // it, so the suggestion shown before saving is the price that will be stored.
+            return localBackend.pricing(drugId,
+                    mode == PricingMode.PROFIT_PER_UNIT ? profitPerUnit : null,
+                    mode == PricingMode.MARGIN_PERCENT ? marginPercent : null,
+                    incomingQuantity, incomingUnitCost);
+        }
         return inventoryApi.pricing(drugId, profit, margin, incomingQuantity, incomingCost)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -104,6 +121,19 @@ public final class InventoryRepository {
 
     @NonNull
     public Single<DrugValuationResponse> valuation(long drugId) {
+        if (preferences.isOffline()) {
+            return localBackend.valuation()
+                    .map(rows -> {
+                        for (DrugValuationResponse row : rows) {
+                            if (row.getDrugId() != null && row.getDrugId() == drugId) {
+                                return row;
+                            }
+                        }
+                        throw new com.lpms.core.error.ApiException(
+                                com.lpms.core.error.ApiError.of(404, "NOT_FOUND",
+                                        "No drug " + drugId + " in the local database"));
+                    });
+        }
         return inventoryApi.valuationForDrug(drugId)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -113,6 +143,9 @@ public final class InventoryRepository {
     /** Plain list, FEFO order, not paginated. */
     @NonNull
     public Single<List<StockBatchResponse>> batchesForDrug(long drugId) {
+        if (preferences.isOffline()) {
+            return localBackend.batchesForDrug(drugId);
+        }
         return inventoryApi.batchesForDrug(drugId)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -128,6 +161,9 @@ public final class InventoryRepository {
     @NonNull
     public PageablePagingSource<LowStockDrugResponse> lowStock(
             @Nullable String search, @NonNull ApiErrorMapper mapper) {
+        if (preferences.isOffline()) {
+            return new LocalPagingSource<>(localBackend.lowStock(), mapper);
+        }
         return new LowStockPagingSource(search, mapper);
     }
 
@@ -135,12 +171,19 @@ public final class InventoryRepository {
     public PageablePagingSource<ExpiringBatchResponse> expiring(
             @Nullable Integer days, @Nullable Boolean expired, @Nullable String search,
             @NonNull ApiErrorMapper mapper) {
+        if (preferences.isOffline()) {
+            return new LocalPagingSource<>(
+                    localBackend.expiring(days == null ? 90 : days), mapper);
+        }
         return new ExpiringPagingSource(days, expired, search, mapper);
     }
 
     /** ADMIN/PHARMACIST. Creates an immutable batch. */
     @NonNull
     public Single<StockBatchResponse> purchase(@NonNull CreatePurchaseRequest request) {
+        if (preferences.isOffline()) {
+            return localBackend.receiveStock(request);
+        }
         return inventoryApi.purchase(request)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))

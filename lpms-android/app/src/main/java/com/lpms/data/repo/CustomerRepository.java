@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.lpms.core.network.NetworkCall;
 import com.lpms.core.network.PageablePagingSource;
 import com.lpms.core.error.ApiErrorMapper;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.api.CustomerApi;
 import com.lpms.data.dto.CreateAdjustmentRequest;
 import com.lpms.data.dto.CreateCustomerRequest;
@@ -16,6 +17,8 @@ import com.lpms.data.dto.PageResponse;
 import com.lpms.data.dto.PaymentResponse;
 import com.lpms.data.dto.TransactionResponse;
 import com.lpms.data.dto.UpdateCustomerRequest;
+import com.lpms.local.LocalBackend;
+import com.lpms.local.LocalPagingSource;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -32,21 +35,60 @@ import retrofit2.Call;
 public final class CustomerRepository {
 
     private final CustomerApi customerApi;
+    private final LocalBackend localBackend;
+    private final AppPreferences preferences;
 
     @Inject
-    public CustomerRepository(@NonNull CustomerApi customerApi) {
+    public CustomerRepository(@NonNull CustomerApi customerApi,
+                              @NonNull LocalBackend localBackend,
+                              @NonNull AppPreferences preferences) {
         this.customerApi = customerApi;
+        this.localBackend = localBackend;
+        this.preferences = preferences;
     }
 
     @NonNull
     public PageablePagingSource<CustomerResponse> paging(@NonNull Filter filter,
                                                          @NonNull ApiErrorMapper errorMapper) {
+        if (preferences.isOffline()) {
+            return new LocalPagingSource<>(
+                    localBackend.observeCustomers().firstOrError()
+                            .map(rows -> applyFilter(rows, filter)),
+                    errorMapper);
+        }
         return new CustomerPagingSource(filter, errorMapper);
+    }
+
+    /** Applies the list filters to a locally-held customer list. */
+    @NonNull
+    private static List<CustomerResponse> applyFilter(@NonNull List<CustomerResponse> rows,
+                                                      @NonNull Filter filter) {
+        String search = filter.getSearch();
+        String needle = search == null ? null : search.trim().toLowerCase(java.util.Locale.ROOT);
+        List<CustomerResponse> out = new java.util.ArrayList<>();
+        for (CustomerResponse row : rows) {
+            if (Boolean.TRUE.equals(filter.getActive()) && !row.isActive()) {
+                continue;
+            }
+            if (needle != null && !needle.isEmpty()) {
+                String name = row.getName() == null ? "" : row.getName().toLowerCase(java.util.Locale.ROOT);
+                String phone = row.getPhone() == null ? "" : row.getPhone();
+                if (!name.contains(needle) && !phone.contains(needle)) {
+                    continue;
+                }
+            }
+            out.add(row);
+        }
+        return out;
     }
 
     /** Convenience for the POS picker: first page of a name/phone search. */
     @NonNull
     public Single<List<CustomerResponse>> search(@Nullable String search, int size) {
+        if (preferences.isOffline()) {
+            // A blank search means "show the first page", exactly as the server treats it.
+            return localBackend.searchCustomers(search == null ? "" : search, size);
+        }
         Single<PageResponse<CustomerResponse>> page = NetworkCall.body(
                 customerApi.list(search, true, 0, size, "name,asc"),
                 new ApiErrorMapper(com.lpms.core.network.json.LpmsGson.get()));
@@ -57,6 +99,12 @@ public final class CustomerRepository {
 
     @NonNull
     public Single<CustomerResponse> get(long id) {
+        if (preferences.isOffline()) {
+            return localBackend.customer(id).toSingle()
+                    .onErrorResumeNext(error -> Single.error(new com.lpms.core.error.ApiException(
+                            com.lpms.core.error.ApiError.of(404, "NOT_FOUND",
+                                    "No customer " + id + " in the local database"))));
+        }
         return customerApi.get(id)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
@@ -99,6 +147,9 @@ public final class CustomerRepository {
 
     @NonNull
     public Single<CustomerResponse> create(@NonNull CreateCustomerRequest request) {
+        if (preferences.isOffline()) {
+            return localBackend.createCustomer(request);
+        }
         return customerApi.create(request)
                 .onErrorResumeNext(error -> Single.error(
                         new com.lpms.core.error.ApiException(NetworkCall.asApiError(error))))
