@@ -105,6 +105,13 @@ dependencies {
     implementation 'androidx.paging:paging-runtime:3.3.5'
     implementation 'androidx.paging:paging-rxjava3:3.3.5'
 
+    // Local persistence for offline mode. Room is the only on-device database; the
+    // network repositories branch on the mode at call time, so their public API and
+    // every ViewModel above them stay unchanged.
+    implementation 'androidx.room:room-runtime:2.6.1'
+    annotationProcessor 'androidx.room:room-compiler:2.6.1'
+    implementation 'androidx.room:room-rxjava3:2.6.1'
+
     // Single async strategy app-wide: RxJava3
     implementation 'io.reactivex.rxjava3:rxjava:3.1.9'
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
