@@ -94,6 +94,11 @@
   <string name="preferences_theme_system">Follow system</string>
   <string name="preferences_theme_light">Light</string>
   <string name="preferences_theme_dark">Dark</string>
+  <!-- App data source: pharmacy server or this phone's local database -->
+  <string name="preferences_mode">Data source</string>
+  <string name="preferences_mode_online">Online — pharmacy server</string>
+  <string name="preferences_mode_offline">Offline — this phone (Preview)</string>
+  <string name="preferences_mode_hint">Switching recreates the app so every screen reads the chosen source. Offline data is stored only on this device.</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_low_stock">Low stock</string>
     <string name="nav_expiring">Expiring soon</string>

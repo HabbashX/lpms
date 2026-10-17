@@ -42,6 +42,9 @@ public final class PreferencesFragment extends Fragment {
     @Inject
     AppPreferences preferences;
 
+    @Inject
+    com.lpms.core.auth.SessionManager sessionManager;
+
     private FragmentPreferencesBinding binding;
 
     @Nullable
@@ -62,6 +65,7 @@ public final class PreferencesFragment extends Fragment {
         // truth even if it is recreated after something else changed the setting.
         checkTheme(preferences.themeMode());
         checkLanguage(preferences.languageTag());
+        checkMode(preferences.isOffline());
 
         binding.themeGroup.setOnCheckedChangeListener((group, checkedId) -> {
             String mode = modeFor(checkedId);
@@ -74,6 +78,31 @@ public final class PreferencesFragment extends Fragment {
             preferences.setLanguageTag(tag);
             applyLocale(tag);
         });
+
+        binding.modeGroup.setOnCheckedChangeListener((group, checkedId) -> applyAppMode(
+                checkedId == R.id.mode_offline));
+    }
+
+    /**
+     * Switches between the pharmacy's server and the local preview.
+     *
+     * <p>Each direction does the session work as well as storing the mode, because the two
+     * are not independent: offline mode needs the local session to exist before any screen
+     * draws, and going back online must not leave a marker session that looks signed in.</p>
+     */
+    private void applyAppMode(boolean offline) {
+        if (offline == preferences.isOffline()) {
+            return;
+        }
+        preferences.setAppMode(offline ? AppPreferences.MODE_OFFLINE : AppPreferences.MODE_ONLINE);
+        if (offline) {
+            sessionManager.onOfflineLogin();
+        } else {
+            sessionManager.logout();
+        }
+        // Repositories read the mode at call time, so every ViewModel that already holds
+        // one must be rebuilt rather than merely told the value changed.
+        requireActivity().recreate();
     }
 
     private void checkTheme(@Nullable String mode) {
@@ -121,6 +150,10 @@ public final class PreferencesFragment extends Fragment {
             return LANG_ARABIC;
         }
         return LANG_SYSTEM;
+    }
+
+    private void checkMode(boolean offline) {
+        binding.modeGroup.check(offline ? R.id.mode_offline : R.id.mode_online);
     }
 
     /** Theme.LPMS is DayNight, so only the night mode needs choosing. */

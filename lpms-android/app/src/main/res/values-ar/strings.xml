@@ -448,4 +448,9 @@
   <string name="preferences_theme_system">حسب النظام</string>
   <string name="preferences_theme_light">فاتح</string>
   <string name="preferences_theme_dark">داكن</string>
+  <!-- مصدر البيانات: سيرفر الصيدلية أو قاعدة بيانات هذا الهاتف -->
+  <string name="preferences_mode">مصدر البيانات</string>
+  <string name="preferences_mode_online">عبر الإنترنت — سيرفر الصيدلية</string>
+  <string name="preferences_mode_offline">بدون اتصال — هذا الهاتف (معاينة)</string>
+  <string name="preferences_mode_hint">التبديل يعيد بناء التطبيق لتقرأ كل الشاشات المصدر المختار. بيانات بدون اتصال تُحفظ على هذا الجهاز فقط.</string>
 </resources>
