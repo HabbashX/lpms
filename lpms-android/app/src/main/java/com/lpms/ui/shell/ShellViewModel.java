@@ -70,6 +70,11 @@ public final class ShellViewModel extends ViewModel {
         if (!sessionManager.isAuthenticated() || mustChangePassword()) {
             return;
         }
+        // In offline mode there is no /auth/me to ask, and a failed round trip on every
+        // resume would surface a snackbar the user can do nothing about.
+        if (sessionManager.isOffline()) {
+            return;
+        }
         disposables.add(authRepository.refreshProfile()
                 .subscribe(user -> {
                     // Applied by AuthRepository; role-gated UI re-renders off session().
@@ -77,6 +82,17 @@ public final class ShellViewModel extends ViewModel {
                     // 401s are already handled by the authenticator. A transport failure
                     // just means the UI keeps the role it last knew.
                 }));
+    }
+
+    /**
+     * Leaves offline mode and returns to the normal sign-in.
+     *
+     * <p>Called instead of {@link #signOut()} when the session is local: the logout
+     * endpoint does not exist offline and would add a failing round trip to what should be
+     * an instant exit.</p>
+     */
+    public void exitOffline() {
+        sessionManager.logout();
     }
 
     public void signOut() {

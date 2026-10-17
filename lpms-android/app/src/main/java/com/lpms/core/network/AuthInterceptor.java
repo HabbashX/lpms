@@ -44,6 +44,18 @@ public final class AuthInterceptor implements Interceptor {
             return chain.proceed(request);
         }
 
+        // Offline mode must never reach the network. The session there is a local marker,
+        // not a real token, so a request would be sent with a credential the server will
+        // reject - and that 401 would then run the refresh path, fail, and sign the user
+        // out of the preview they were in the middle of.
+        //
+        // Failing here rather than calling proceed() also gives screens that have not been
+        // taught about offline mode a clear transport error instead of a server answer
+        // they would misread as an authentication problem.
+        if (sessionManager.isOffline()) {
+            throw new OfflineRequestException(request.url().encodedPath());
+        }
+
         Session session = sessionManager.current();
         if (session == null || session.getAccessToken().isEmpty()) {
             return chain.proceed(request);
@@ -55,5 +67,13 @@ public final class AuthInterceptor implements Interceptor {
         return chain.proceed(request.newBuilder()
                 .header(AUTHORIZATION, BEARER + session.getAccessToken())
                 .build());
+    }
+
+    /** Thrown instead of sending a request while the app is in offline mode. */
+    public static final class OfflineRequestException extends IOException {
+
+        public OfflineRequestException(@NonNull String path) {
+            super("Offline mode: " + path + " is not available without a connection");
+        }
     }
 }
