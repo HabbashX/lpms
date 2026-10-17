@@ -44,6 +44,9 @@
     <string name="error_offline_checkout_blocked">You are offline. Checkout is disabled until the connection is restored.</string>
     <!-- Login -->
     <string name="login">Sign in</string>
+  <!-- Offline preview entry point on the login screen -->
+  <string name="login_offline">Offline Mode (Preview)</string>
+  <string name="login_offline_hint">Opens the app on this phone\'s local database. No account, no server.</string>
     <string name="login_subtitle">Larv Pharmacy Management</string>
     <string name="login_username">Username</string>
     <string name="login_password">Password</string>

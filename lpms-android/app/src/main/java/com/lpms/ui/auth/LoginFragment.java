@@ -86,6 +86,12 @@ public final class LoginFragment extends Fragment {
         });
 
         binding.loginButton.setOnClickListener(v -> submit());
+        // Offline preview: no credentials, no request. The fields above are ignored by
+        // design, which is why nothing here validates them first.
+        binding.offlineButton.setOnClickListener(v -> {
+            clearError();
+            viewModel.loginOffline();
+        });
     }
 
 

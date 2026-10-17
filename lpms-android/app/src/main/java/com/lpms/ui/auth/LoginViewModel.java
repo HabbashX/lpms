@@ -8,6 +8,7 @@ import com.lpms.core.auth.SessionManager;
 import com.lpms.core.error.ApiError;
 import com.lpms.core.error.ApiErrorCodes;
 import com.lpms.core.network.NetworkCall;
+import com.lpms.core.util.AppPreferences;
 import com.lpms.data.repo.AuthRepository;
 
 import javax.inject.Inject;
@@ -62,6 +63,7 @@ public final class LoginViewModel extends ViewModel {
 
     private final AuthRepository authRepository;
     private final SessionManager sessionManager;
+    private final AppPreferences preferences;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
@@ -71,9 +73,11 @@ public final class LoginViewModel extends ViewModel {
     private final MutableLiveData<Long> rateLimitCountdown = new MutableLiveData<>(0L);
 
     @Inject
-    public LoginViewModel(@NonNull AuthRepository authRepository) {
+    public LoginViewModel(@NonNull AuthRepository authRepository,
+                          @NonNull AppPreferences preferences) {
         this.authRepository = authRepository;
         this.sessionManager = authRepository.sessions();
+        this.preferences = preferences;
     }
 
     @NonNull
@@ -134,6 +138,30 @@ public final class LoginViewModel extends ViewModel {
                             loading.setValue(false);
                             onLoginFailed(throwable);
                         }));
+    }
+
+    /**
+     * Signs in to offline mode, bypassing the backend entirely.
+     *
+     * <p>Deliberately does not look at the username or password fields. Offline mode is a
+     * preview with an empty local database, so there is nothing to authenticate against -
+     * asking for a password it will not check would be worse than not asking.</p>
+     */
+    public void loginOffline() {
+        loading.setValue(true);
+        error.setValue(null);
+        connectivityHintRes.setValue(null);
+        rateLimitCountdown.setValue(0L);
+        preferences.setAppMode(AppPreferences.MODE_OFFLINE);
+        sessionManager.onOfflineLogin();
+        loading.setValue(false);
+        next.setValue(Next.HOME);
+    }
+
+    /** Leaves offline mode and returns to the normal backend login. */
+    public void switchToOnline() {
+        preferences.setAppMode(AppPreferences.MODE_ONLINE);
+        sessionManager.logout();
     }
 
     private void onLoginFailed(@NonNull Throwable throwable) {

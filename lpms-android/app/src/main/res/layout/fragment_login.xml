@@ -98,6 +98,32 @@
             android:minHeight="52dp"
             android:text="@string/login" />
 
+        <!--
+          Offline preview: opens the app on the local SQLite database instead of the
+          pharmacy's server. It is an outlined button rather than a filled one because it
+          does not sign anybody in - there is nothing to authenticate against, and saying
+          so plainly avoids anyone mistaking the demo for a real session.
+        -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/offline_button"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:minHeight="48dp"
+            android:text="@string/login_offline"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/offline_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="@string/login_offline_hint"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
         <ProgressBar
             android:id="@+id/login_progress"
             style="?android:progressBarStyleSmall"

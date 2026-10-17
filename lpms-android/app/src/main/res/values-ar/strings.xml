@@ -41,6 +41,9 @@
     <string name="error_server_waking">لا يزال الخادم قيد التشغيل. يُرجى المحاولة بعد قليل.</string>
     <string name="error_offline_checkout_blocked">أنت غير متصل. تم تعطيل إتمام البيع حتى عودة الاتصال.</string>
     <string name="login">تسجيل الدخول</string>
+  <!-- وضع المعاينة: يعمل داخل قاعدة بيانات هذا الهاتف بدون حساب أو سيرفر -->
+  <string name="login_offline">وضع المعاينة بدون اتصال</string>
+  <string name="login_offline_hint">يفتح التطبيق على قاعدة بيانات الهاتف المحلية. بلا حساب وبلا سيرفر.</string>
     <string name="login_subtitle">نظام إدارة صيدلية لارف</string>
     <string name="login_username">اسم المستخدم</string>
     <string name="login_password">كلمة المرور</string>
