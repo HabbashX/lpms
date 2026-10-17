@@ -10,8 +10,8 @@ import javax.inject.Singleton;
 
 /**
  * Plain preferences for <b>non-secret</b> local settings only: currency symbol,
- * language and theme. Credentials never go here — they live in
- * {@link com.lpms.core.auth.SessionStore} (EncryptedSharedPreferences).
+ * language, theme and the online/offline mode. Credentials never go here — they live
+ * in {@link com.lpms.core.auth.SessionStore} (EncryptedSharedPreferences).
  *
  * <p>The API endpoint is not a setting: it is fixed in {@code lpms.baseUrl}.</p>
  */
@@ -23,6 +23,7 @@ public final class AppPreferences {
     private static final String K_CURRENCY = "currency_symbol";
     private static final String K_LANGUAGE = "language_tag";
     private static final String K_THEME = "theme_mode";
+    private static final String K_MODE = "app_mode";
 
     /**
      * Israeli new shekel (NIS), U+20AA. Screens use this as their placeholder before the
@@ -33,6 +34,15 @@ public final class AppPreferences {
     public static final String THEME_SYSTEM = "system";
     public static final String THEME_LIGHT = "light";
     public static final String THEME_DARK = "dark";
+
+    /** Talking to the configured backend; credentials and data both come from there. */
+    public static final String MODE_ONLINE = "online";
+
+    /**
+     * Local only. Every screen reads and writes the on-device database, and no request
+     * leaves the phone. A preview of the app rather than the pharmacy's real books.
+     */
+    public static final String MODE_OFFLINE = "offline";
 
     private final SharedPreferences prefs;
 
@@ -72,5 +82,21 @@ public final class AppPreferences {
 
     public void setThemeMode(@NonNull String mode) {
         prefs.edit().putString(K_THEME, mode).apply();
+    }
+
+    /** {@link #MODE_ONLINE} or {@link #MODE_OFFLINE}. Online is the default. */
+    @NonNull
+    public String appMode() {
+        return prefs.getString(K_MODE, MODE_ONLINE);
+    }
+
+    public boolean isOffline() {
+        return MODE_OFFLINE.equals(appMode());
+    }
+
+    /** Written with {@code commit()} so a mode change survives a process death. */
+    public void setAppMode(@NonNull String mode) {
+        String value = MODE_OFFLINE.equals(mode) ? MODE_OFFLINE : MODE_ONLINE;
+        prefs.edit().putString(K_MODE, value).commit();
     }
 }

@@ -103,6 +103,53 @@ public final class SessionManager {
         return refreshLock;
     }
 
+    /**
+     * Enters offline mode.
+     *
+     * <p>No credentials are checked and no request is made: the point of offline mode is to
+     * work with a phone that cannot reach the pharmacy's server. The tokens are markers
+     * rather than real ones - {@link #isAuthenticated()} only tests that they are present,
+     * and nothing ever sends them because no repository calls the network in this mode.</p>
+     *
+     * <p>The role is deliberately {@link Role#ADMIN}. A preview handed to a customer should
+     * show the whole product, and a role that hides half the menus would make the demo
+     * look like the app is broken. This session never touches real data.</p>
+     */
+    public void onOfflineLogin() {
+        // Far future, so no refresh path is ever entered and the session outlives a demo.
+        Instant far = Instant.now().plusSeconds(60L * 60 * 24 * 3650);
+        Session next = new Session(
+                OFFLINE_USER_ID,
+                OFFLINE_USERNAME,
+                Role.ADMIN,
+                false,
+                OFFLINE_ACCESS_TOKEN,
+                OFFLINE_REFRESH_TOKEN,
+                far,
+                far);
+        // commit() not apply(): the mode must be on disk before any screen reads it, or a
+        // process death mid-launch would drop the user back to a login screen that then
+        // cannot start offline mode from a cleared auth state.
+        store.save(next);
+        publish(next);
+    }
+
+    /** True when the current session belongs to offline mode. */
+    public boolean isOffline() {
+        Session s = current;
+        return s != null && OFFLINE_ACCESS_TOKEN.equals(s.getAccessToken());
+    }
+
+    /** Id of the local user shown in the More hub. */
+    public static final long OFFLINE_USER_ID = -1L;
+
+    /** Marker tokens; recognised by {@link #isOffline()}. */
+    public static final String OFFLINE_ACCESS_TOKEN = "offline-mode";
+    public static final String OFFLINE_REFRESH_TOKEN = "offline-mode";
+
+    /** Username shown for the local session. */
+    private static final String OFFLINE_USERNAME = "Preview user";
+
     // ------------------------------------------------------------- transitions
 
     /** After a successful login. {@code mustChangePassword} comes from /auth/me. */
