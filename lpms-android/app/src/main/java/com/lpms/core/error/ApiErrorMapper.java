@@ -69,6 +69,11 @@ public final class ApiErrorMapper {
         if (throwable instanceof HttpException) {
             return ApiError.unparseable(((HttpException) throwable).code(), null);
         }
+        // Before the IOException branch: offline mode is a deliberate decision, not a
+        // broken connection, and must not be reported as one.
+        if (throwable instanceof OfflineModeException) {
+            return ApiError.offlineMode(((OfflineModeException) throwable).getPath());
+        }
         if (throwable instanceof SocketTimeoutException
                 || throwable instanceof InterruptedIOException) {
             return ApiError.timeout("The server took too long to respond.");

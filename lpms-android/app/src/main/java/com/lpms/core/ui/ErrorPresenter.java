@@ -54,6 +54,11 @@ public final class ErrorPresenter {
         if (error.getStatus() == 401 || error.getStatus() == 403) {
             return Action.GO_TO_LOGIN;
         }
+        // Offline mode is not a connection problem: retrying the same request offline
+        // fails identically, so a RETRY button would only be a lie.
+        if (ApiErrorCodes.OFFLINE_MODE.equals(code)) {
+            return Action.SNACKBAR;
+        }
         if (error.isNetworkFailure() || error.getStatus() == 0 || error.getStatus() >= 500) {
             return Action.RETRY;
         }
@@ -72,6 +77,12 @@ public final class ErrorPresenter {
     @StringRes
     public static int fallbackStringRes(@NonNull ApiError error) {
         String code = error.getCode();
+        // Checked before NETWORK_UNAVAILABLE: offline refusals used to fall through to
+        // "check your network", which is the wrong advice when the app is running on
+        // its local database on purpose.
+        if (ApiErrorCodes.OFFLINE_MODE.equals(code)) {
+            return R.string.error_offline_mode;
+        }
         if (ApiErrorCodes.NETWORK_UNAVAILABLE.equals(code)) {
             return R.string.error_network;
         }

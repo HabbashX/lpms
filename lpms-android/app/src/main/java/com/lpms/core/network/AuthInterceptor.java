@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.lpms.core.auth.Session;
 import com.lpms.core.auth.SessionManager;
+import com.lpms.core.error.OfflineModeException;
 
 import java.io.IOException;
 
@@ -53,7 +54,7 @@ public final class AuthInterceptor implements Interceptor {
         // taught about offline mode a clear transport error instead of a server answer
         // they would misread as an authentication problem.
         if (sessionManager.isOffline()) {
-            throw new OfflineRequestException(request.url().encodedPath());
+            throw new OfflineModeException(request.url().encodedPath());
         }
 
         Session session = sessionManager.current();
@@ -67,13 +68,5 @@ public final class AuthInterceptor implements Interceptor {
         return chain.proceed(request.newBuilder()
                 .header(AUTHORIZATION, BEARER + session.getAccessToken())
                 .build());
-    }
-
-    /** Thrown instead of sending a request while the app is in offline mode. */
-    public static final class OfflineRequestException extends IOException {
-
-        public OfflineRequestException(@NonNull String path) {
-            super("Offline mode: " + path + " is not available without a connection");
-        }
     }
 }

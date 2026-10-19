@@ -173,6 +173,12 @@ public final class LoginViewModel extends ViewModel {
             return;
         }
         if (apiError.isNetworkFailure()) {
+            if (preferences.isOffline()) {
+                // Offline mode was chosen on this screen; probing the server would both
+                // fail and tell the user to check their connection, which is exactly the
+                // advice that does not apply here.
+                return;
+            }
             // Distinguish "the server is asleep/unreachable" from "this device is
             // offline" by probing the public health endpoint once.
             probeServerReachability();

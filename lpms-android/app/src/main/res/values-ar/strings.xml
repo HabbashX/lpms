@@ -26,6 +26,7 @@
     <string name="error_no_permission">ليس لديك صلاحية</string>
     <string name="error_not_found">غير موجود</string>
     <string name="error_network">لا يوجد اتصال. تحقق من الشبكة وحاول مرة أخرى.</string>
+    <string name="error_offline_mode">غير متاح في الوضع غير المتصل — يعمل هذا الجهاز على قاعدة بيانات محلية فقط. بدّل إلى الوضع المتصل من الإعدادات لاستخدامه.</string>
     <string name="error_timeout">استغرق الخادم وقتًا طويلاً للرد.</string>
     <string name="error_server">خطأ في الخادم. يُرجى المحاولة مرة أخرى.</string>
     <string name="error_validation">يُرجى مراجعة الحقول المميزة.</string>

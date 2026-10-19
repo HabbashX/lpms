@@ -28,6 +28,7 @@
     <string name="error_no_permission">You don\'t have permission</string>
     <string name="error_not_found">Not found</string>
     <string name="error_network">No connection. Check your network and try again.</string>
+  <string name="error_offline_mode">Not available in Offline Mode — this phone runs on its local database only. Switch to Online Mode in Preferences to use this.</string>
     <string name="error_timeout">The server took too long to respond.</string>
     <string name="error_server">Server error. Please try again.</string>
     <string name="error_validation">Please check the highlighted fields.</string>

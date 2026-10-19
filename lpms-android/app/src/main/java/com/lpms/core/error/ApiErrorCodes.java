@@ -78,6 +78,13 @@ public final class ApiErrorCodes {
     public static final String NETWORK_UNAVAILABLE = "NETWORK_UNAVAILABLE";
     public static final String TIMEOUT = "TIMEOUT";
 
+    /**
+     * The app is running on its local database and the request was refused before it
+     * left the device. Not a backend code, and deliberately not a network failure:
+     * there is nothing to retry and no connection problem to fix.
+     */
+    public static final String OFFLINE_MODE = "OFFLINE_MODE";
+
     /** True for the codes that must trigger exactly one silent refresh. */
     public static boolean isRefreshTrigger(String code) {
         return INVALID_TOKEN.equals(code)

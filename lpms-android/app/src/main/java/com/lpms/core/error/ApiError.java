@@ -69,6 +69,11 @@ public final class ApiError {
         return ApiErrorCodes.NETWORK_UNAVAILABLE.equals(code) || ApiErrorCodes.TIMEOUT.equals(code);
     }
 
+    /** True when the app itself refused the request because it is offline. */
+    public boolean isOfflineModeRefusal() {
+        return ApiErrorCodes.OFFLINE_MODE.equals(code);
+    }
+
     /** 401 codes that must not be treated as "log the user out" directly. */
     public boolean isAuthProblem() {
         return status == 401;
@@ -114,6 +119,17 @@ public final class ApiError {
 
     public static ApiError timeout(@NonNull String message) {
         return new ApiError(0, ApiErrorCodes.TIMEOUT, message, null, null);
+    }
+
+    /**
+     * A request the app refused to send because it is in offline mode.
+     *
+     * <p>The message is empty on purpose: {@code ErrorPresenter} then falls back to the
+     * localised string for {@link ApiErrorCodes#OFFLINE_MODE} instead of showing a
+     * hardcoded English transport message.</p>
+     */
+    public static ApiError offlineMode(@Nullable String path) {
+        return new ApiError(0, ApiErrorCodes.OFFLINE_MODE, "", path, null);
     }
 
     /** Fallback when the backend returned a body we could not parse. */
